@@ -409,11 +409,23 @@
 
     fetchLatest(slug).then(render).catch(function () { /* keep the static fallback */ });
 
+    // The cached copy is only there to keep repeat views off the API, which allows 60 calls an hour
+    // to an address that is not signed in. It has to go stale, or a tab opened before a release
+    // keeps showing the old version for as long as it stays open, which is exactly what happened
+    // when 1.0.1 shipped.
+    var cacheLifetimeMs = 10 * 60 * 1000;
+
     function fetchLatest(repo) {
       var key = 'bs-release:' + repo;
       var cached = null;
-      try { cached = sessionStorage.getItem(key); } catch (e) { /* private mode */ }
-      if (cached) return Promise.resolve(JSON.parse(cached));
+      try {
+        var stored = sessionStorage.getItem(key);
+        if (stored) cached = JSON.parse(stored);
+      } catch (e) { /* private mode, or something else wrote nonsense here */ }
+
+      if (cached && cached.fetched && (Date.now() - cached.fetched) < cacheLifetimeMs) {
+        return Promise.resolve(cached);
+      }
 
       return fetch('https://api.github.com/repos/' + repo + '/releases/latest', {
         headers: { Accept: 'application/vnd.github+json' }
@@ -425,12 +437,17 @@
           tag: release.tag_name,
           published: release.published_at,
           body: release.body || '',
+          fetched: Date.now(),
           assets: (release.assets || []).map(function (a) {
             return { name: a.name, size: a.size, url: a.browser_download_url };
           })
         };
         try { sessionStorage.setItem(key, JSON.stringify(trimmed)); } catch (e) { /* ignore */ }
         return trimmed;
+      }).catch(function (error) {
+        // Rate limited or offline. Stale details beat the static fallback.
+        if (cached) return cached;
+        throw error;
       });
     }
 
@@ -512,8 +529,9 @@
       lines.forEach(function (raw) {
         var line = raw.trim();
 
-        // Blank lines close a list. Markdown table rules are noise once tables are not rendered.
-        if (!line || /^\|[\s:|-]+\|$/.test(line)) {
+        // Blank lines close a list. Markdown table rules are noise once tables are not rendered,
+        // and so is a horizontal rule, which would otherwise come out as three literal dashes.
+        if (!line || /^\|[\s:|-]+\|$/.test(line) || /^(-{3,}|\*{3,}|_{3,})$/.test(line)) {
           if (inList) { html += '</ul>'; inList = false; }
           return;
         }
@@ -543,7 +561,9 @@
     function inline(text) {
       return text
         .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Bold before italic, so the two stars of a bold run are not read as one italic run.
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*\w])\*([^*\n]+)\*(?![*\w])/g, '$1<em>$2</em>')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
         .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2">$2</a>');
     }
