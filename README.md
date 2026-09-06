@@ -11,7 +11,8 @@ clear, and everything else goes dark so nothing pulls your eye mid fight.
 - 🛡️ Keeps the game monitor, the focused monitor and any monitor you whitelist clear
 - 🌙 Covered monitors go solid black, or run a Windows screensaver if you prefer
 - 🎚️ Opacity slider, so a covered monitor can be seen through rather than hidden
-- 🔝 Keep chosen programs above the overlay, so a capture or chat window stays visible
+- 🔝 Keep chosen programs above the overlay, so a capture or chat window stays visible, and
+  optionally hold the blackout up while one of them has focus
 - ⏸️ Pause from the tray or with `Ctrl + Alt + B`
 - 🎨 Themed settings window that follows Windows dark mode
 - 🔄 Optional update check, off until you switch it on, and the only time it uses the network
@@ -79,7 +80,12 @@ covers every copy of that program. Use **Browse** and it adds that one exact exe
 what you want when two builds share a name. Each row says which it is.
 
 A program is only held above the overlay while blackout is on, and is put back to a normal z order
-as soon as it ends. One that was already set to stay on top by its own settings is left that way.
+as soon as it ends, and when BlackScreens closes.
+
+**Keep the screens black while one of these has focus** is off by default. Turn it on and alt tabbing
+between the game and these programs no longer drops the blackout, so you can read chat or watch a
+capture preview without the other screens lighting up behind it. The game still has to be running
+fullscreen: close it and the blackout ends as usual.
 
 ## 🔄 Updates
 

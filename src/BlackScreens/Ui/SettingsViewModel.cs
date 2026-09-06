@@ -154,6 +154,7 @@ public sealed class SettingsViewModel : ObservableObject
     private string _newAboveOverlayEntry = string.Empty;
     private string? _selectedAboveOverlayEntry;
     private int _overlayOpacity;
+    private bool _holdBlackoutForAboveOverlay;
     private bool _isDirty;
 
     /// <summary>The picker entry that defers to the screensaver chosen in Windows.</summary>
@@ -201,6 +202,7 @@ public sealed class SettingsViewModel : ObservableObject
             settings.GetAboveOverlay().OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
 
         _overlayOpacity = settings.GetOverlayOpacity();
+        _holdBlackoutForAboveOverlay = settings.HoldBlackoutForAboveOverlay;
     }
 
     public ObservableCollection<MonitorChoice> Monitors { get; }
@@ -209,6 +211,13 @@ public sealed class SettingsViewModel : ObservableObject
 
     /// <summary>Programs that stay visible above a blacked out monitor.</summary>
     public ObservableCollection<string> AboveOverlay { get; }
+
+    /// <summary>Whether focusing one of those programs keeps the blackout up.</summary>
+    public bool HoldBlackoutForAboveOverlay
+    {
+        get => _holdBlackoutForAboveOverlay;
+        set => Track(ref _holdBlackoutForAboveOverlay, value);
+    }
 
     /// <summary>How solid a blacked out monitor is. 100 is opaque.</summary>
     public int OverlayOpacity
@@ -593,6 +602,7 @@ public sealed class SettingsViewModel : ObservableObject
         settings.DenylistProcessNames = Denylist.ToList();
         settings.AboveOverlayProcessNames = AboveOverlay.ToList();
         settings.OverlayOpacity = OverlayOpacity;
+        settings.HoldBlackoutForAboveOverlay = HoldBlackoutForAboveOverlay;
         settings.Blackout = BlackoutModes.Format(Blackout);
         settings.ScreensaverPath = ScreensaverPath;
     }

@@ -19,9 +19,19 @@ public sealed class GameDetector
         var gameMonitors = new List<Rectangle>();
         Rectangle? focusClear = null;
 
+        // Alt tabbing to a program that is meant to sit above the blackout should not end it. While
+        // one of those holds focus the game is judged as if it were in the background, which it now
+        // is, and its own monitor is not cleared, because the point is to read it over the black.
+        var held = _options.HoldsBlackout is { Count: > 0 } holds
+            && windows.Any(window => window.IsForeground
+                && holds.Matches(window.ProcessName, window.ExecutablePath));
+
+        var backgroundGames = _options.BackgroundGames || held;
+        var clearFocused = _options.AlwaysClearFocusedMonitor && !held;
+
         foreach (var window in windows)
         {
-            if (window.IsForeground && (_denylist.Contains(window.ProcessName, window.ExecutablePath) || _options.AlwaysClearFocusedMonitor))
+            if (window.IsForeground && (_denylist.Contains(window.ProcessName, window.ExecutablePath) || clearFocused))
             {
                 focusClear = window.MonitorBounds;
             }
@@ -36,7 +46,7 @@ public sealed class GameDetector
                 continue;
             }
 
-            if (!_options.BackgroundGames && !window.IsForeground)
+            if (!backgroundGames && !window.IsForeground)
             {
                 continue;
             }

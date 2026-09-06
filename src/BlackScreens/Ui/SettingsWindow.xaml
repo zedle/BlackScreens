@@ -457,14 +457,23 @@
             </ListBox.ItemTemplate>
           </ListBox>
 
-          <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,14,0,0">
-            <Button Content="Remove"
-                    IsEnabled="{Binding CanRemoveAboveOverlayEntry}"
-                    Click="RemoveAboveOverlayClick" />
+          <StackPanel Grid.Row="3" Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal">
+              <Button Content="Remove"
+                      IsEnabled="{Binding CanRemoveAboveOverlayEntry}"
+                      Click="RemoveAboveOverlayClick" />
+              <TextBlock Style="{StaticResource Hint}"
+                         VerticalAlignment="Center"
+                         Margin="14,0,0,0"
+                         Text="Empty by default. A program listed here is put back to normal once blackout ends." />
+            </StackPanel>
+
+            <CheckBox Content="Keep the screens black while one of these has focus"
+                      Margin="0,14,0,0"
+                      IsChecked="{Binding HoldBlackoutForAboveOverlay}" />
             <TextBlock Style="{StaticResource Hint}"
-                       VerticalAlignment="Center"
-                       Margin="14,0,0,0"
-                       Text="Empty by default. A program listed here is put back to normal once blackout ends." />
+                       Margin="28,6,0,0"
+                       Text="Alt tab between the game and these programs without the blackout dropping. The game still has to be running fullscreen, so closing it ends the blackout as usual." />
           </StackPanel>
         </Grid>
 

@@ -44,6 +44,12 @@ public sealed class AppSettings
     /// <summary>How solid a blacked out monitor is, as a percentage. 100 is opaque.</summary>
     public int OverlayOpacity { get; set; } = DefaultOverlayOpacity;
 
+    /// <summary>
+    /// Whether focusing one of the programs above keeps the blackout up. Off by default, so an
+    /// install that predates it behaves as it did.
+    /// </summary>
+    public bool HoldBlackoutForAboveOverlay { get; set; }
+
     public bool BackgroundGames { get; set; }
 
     public bool? AlwaysClearFocusedMonitor { get; set; }
@@ -107,7 +113,10 @@ public sealed class AppSettings
     public DetectOptions ToDetectOptions() => new()
     {
         BackgroundGames = BackgroundGames,
-        AlwaysClearFocusedMonitor = GetAlwaysClearFocusedMonitor()
+        AlwaysClearFocusedMonitor = GetAlwaysClearFocusedMonitor(),
+        HoldsBlackout = HoldBlackoutForAboveOverlay && AboveOverlayProcessNames.Count > 0
+            ? new ProcessRules(AboveOverlayProcessNames)
+            : null
     };
 
     public void Toggle(string deviceName)
