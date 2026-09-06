@@ -32,16 +32,26 @@ pwsh scripts/publish.ps1
 
 ## How the code is laid out
 
-- `src/BlackScreens/` is the tray app
-  - `GameDetector` and friends decide what should go black. This is pure logic over a snapshot of
-    windows, with no Win32 calls and no UI, which is what makes it testable. Keep it that way.
-  - `WindowEnumerator`, `MonitorEnumerator` and `NativeMethods` do the live Win32 scanning
-  - `MonitorHardware` reads the make and model out of each panel's EDID. The parsing is pure and
-    tested; only the lookup touches Win32 and the registry
-  - `OverlayManager`, `OverlayForm` and `PlacedForm` put black windows on screens
-  - `Updates/` checks GitHub for a newer release and installs it
-  - `Ui/` is the WPF settings window, its view model and the theming
-  - `Themes/` holds the palettes and control styles
+- `src/BlackScreens/` is the tray app. `Program.cs` is the entry point and everything else sits in a
+  folder named for what it does:
+  - `Detection/` decides what should go black. `GameDetector` and the types around it are pure logic
+    over a snapshot of windows, with no Win32 calls and no UI, which is what makes them testable.
+    Keep them that way. `WindowEnumerator` is the one part that touches Win32, and only to gather
+    the snapshot the rest works from.
+  - `Monitors/` finds the screens. `MonitorHardware` reads the make and model out of each panel's
+    EDID; the parsing is pure and tested, and only the lookup touches Win32 and the registry.
+  - `Overlays/` puts the black windows on screens. `OverlayManager`, `OverlayForm` and `PlacedForm`.
+  - `Configuration/` is the settings file, the blackout modes, the screensaver list and the startup
+    registration.
+  - `App/` is the tray app itself: the application context that owns the icon and the menu, single
+    instance handling, and the crash and error logs.
+  - `Interop/` is the P/Invoke surface, plus the two hidden windows built on it.
+  - `Updates/` checks GitHub for a newer release and installs it.
+  - `Ui/` is the WPF settings window and its view models, and `Themes/` holds the palettes and
+    control styles.
+
+  `GlobalUsings.cs` names those namespaces once, so files reaching across two or three folders do
+  not each repeat the same block of usings. `Ui` is deliberately left out of it.
 - `tests/BlackScreens.Tests/` is xUnit
 - `installer/` is the NSIS script
 - `docs/` is the website, served by GitHub Pages with no build step
