@@ -86,13 +86,19 @@ pwsh scripts/publish.ps1
   opaque while a screensaver is up: anything under 100 makes the overlay a layered window, which
   does not composite over that native child.
 - **Programs kept on top.** `AlwaysOnTop` makes another program's window topmost, which is a change
-  to a window the app does not own. It records whether the window was already topmost and only puts
-  back the ones it actually changed, so a program that chose that for itself keeps it.
+  to a window the app does not own, so it lowers every one it raised when blackout ends and again on
+  the way out of the app. It deliberately does not try to preserve a program's own always on top
+  setting. Doing that latched: a window stranded by a crash was read as the user's own choice on the
+  next run and never lowered again.
 - **Never write the z order on a timer.** Both the overlay reassert and the raise in `AlwaysOnTop`
   used to run every poll, so the overlay went above the kept window and the kept window went back
   above the overlay four times a second, and it visibly flickered as it was covered and uncovered.
   Both now act only when the z order is actually wrong: the overlays are pushed back only when the
   foreground has moved, and a kept window is raised only when it is behind an overlay.
+- **The task switcher.** Alt Tab and Task View take the foreground while they are on screen, and
+  treating that as a real change of foreground ends a blackout, which lights the screens up behind
+  the switcher. `TaskSwitcher` matches them by window class, not by process, because explorer.exe
+  also owns the taskbar, the desktop and every File Explorer window.
 - **Updates.** The app must not touch the network unless the user turned updates on. Anything that
   changes that has to change the readme and the website too, because both make the claim.
 - **The settings window.** The nav rail is a `ListBox` rather than a `TabControl`, because a

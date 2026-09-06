@@ -17,4 +17,10 @@ public sealed record WindowSnapshot(
     /// on top entry can name one exact file rather than every program with the same name.
     /// </summary>
     public string ExecutablePath { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The window class. Only needed to recognise the shell's own switcher windows, which should not
+    /// count as a real change of foreground.
+    /// </summary>
+    public string ClassName { get; init; } = string.Empty;
 }

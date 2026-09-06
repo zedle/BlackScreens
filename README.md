@@ -82,10 +82,15 @@ what you want when two builds share a name. Each row says which it is.
 A program is only held above the overlay while blackout is on, and is put back to a normal z order
 as soon as it ends, and when BlackScreens closes.
 
-**Keep the screens black while one of these has focus** is off by default. Turn it on and alt tabbing
-between the game and these programs no longer drops the blackout, so you can read chat or watch a
-capture preview without the other screens lighting up behind it. The game still has to be running
-fullscreen: close it and the blackout ends as usual.
+**Keep the screens black while one of these has focus** is on, and means what it says: alt tabbing
+between the game and these programs does not drop the blackout, so you can read chat or watch a
+capture preview without the other screens lighting up behind it. It does nothing until something is
+on the list, and the game still has to be running fullscreen, so closing it ends the blackout as
+usual. Turn it off if you would rather the screens come back whenever the game is not in front.
+
+The Alt Tab switcher itself never ends a blackout, whatever these settings say. It takes the
+foreground for as long as Alt is held, which used to light the screens up behind the switcher you
+were looking at.
 
 ## 🔄 Updates
 

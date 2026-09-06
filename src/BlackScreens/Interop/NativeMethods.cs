@@ -44,6 +44,9 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern nint GetForegroundWindow();
 
+    [DllImport("user32.dll", EntryPoint = "GetClassNameW", CharSet = CharSet.Unicode)]
+    public static extern int GetClassName(nint hWnd, System.Text.StringBuilder className, int count);
+
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(nint hWnd, out int lpdwProcessId);
 

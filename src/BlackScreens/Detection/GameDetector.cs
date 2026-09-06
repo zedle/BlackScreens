@@ -19,12 +19,16 @@ public sealed class GameDetector
         var gameMonitors = new List<Rectangle>();
         Rectangle? focusClear = null;
 
-        // Alt tabbing to a program that is meant to sit above the blackout should not end it. While
-        // one of those holds focus the game is judged as if it were in the background, which it now
-        // is, and its own monitor is not cleared, because the point is to read it over the black.
-        var held = _options.HoldsBlackout is { Count: > 0 } holds
-            && windows.Any(window => window.IsForeground
-                && holds.Matches(window.ProcessName, window.ExecutablePath));
+        // Two reasons to judge the game as if it were in the background, which it now is, and to
+        // leave the foreground window's monitor black rather than clearing it.
+        //
+        // The switcher is not optional: it is on screen for as long as Alt is held, and treating it
+        // as a real change of foreground meant the screens lit up behind the very thing you were
+        // looking at. A program on the on top list is the user's choice, on the On top page.
+        var held = TaskSwitcher.IsShowing(windows)
+            || (_options.HoldsBlackout is { Count: > 0 } holds
+                && windows.Any(window => window.IsForeground
+                    && holds.Matches(window.ProcessName, window.ExecutablePath)));
 
         var backgroundGames = _options.BackgroundGames || held;
         var clearFocused = _options.AlwaysClearFocusedMonitor && !held;

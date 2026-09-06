@@ -45,10 +45,11 @@ public sealed class AppSettings
     public int OverlayOpacity { get; set; } = DefaultOverlayOpacity;
 
     /// <summary>
-    /// Whether focusing one of the programs above keeps the blackout up. Off by default, so an
-    /// install that predates it behaves as it did.
+    /// Whether focusing one of the programs above keeps the blackout up. On by default, which only
+    /// means anything once something is on the list: putting a program there is already a statement
+    /// that you want to look at it while the rest stays dark.
     /// </summary>
-    public bool HoldBlackoutForAboveOverlay { get; set; }
+    public bool HoldBlackoutForAboveOverlay { get; set; } = true;
 
     public bool BackgroundGames { get; set; }
 

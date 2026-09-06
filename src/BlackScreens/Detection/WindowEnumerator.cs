@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace BlackScreens.Detection;
 
@@ -80,7 +81,8 @@ public static class WindowEnumerator
                     hWnd == foreground,
                     monitorInfo.rcMonitor.ToRectangle())
                 {
-                    ExecutablePath = executablePath
+                    ExecutablePath = executablePath,
+                    ClassName = ReadClassName(hWnd)
                 });
             }
             catch
@@ -97,6 +99,13 @@ public static class WindowEnumerator
     /// Resolves a process name once per scan. Cheaper than a <see cref="System.Diagnostics.Process"/>
     /// lookup for every window, which the 250 ms poll would otherwise repeat dozens of times a second.
     /// </summary>
+    private static string ReadClassName(nint handle)
+    {
+        var buffer = new StringBuilder(96);
+        var length = NativeMethods.GetClassName(handle, buffer, buffer.Capacity);
+        return length <= 0 ? string.Empty : buffer.ToString(0, length);
+    }
+
     private static string ResolveProcessPath(int processId, Dictionary<int, string> cache)
     {
         if (cache.TryGetValue(processId, out var cached))
