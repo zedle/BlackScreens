@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Globalization;
 
 namespace BlackScreens.Ui;
@@ -11,8 +12,11 @@ public sealed class MonitorChoice : ObservableObject
     public MonitorChoice(ConnectedMonitor monitor, bool isWhitelisted)
     {
         DeviceName = monitor.DeviceName;
-        Title = FriendlyName(monitor.DeviceName);
+        Title = Headline(monitor);
         Detail = Describe(monitor);
+        Bounds = monitor.Bounds;
+        Number = FriendlyName(monitor.DeviceName).Replace("Display ", string.Empty, StringComparison.Ordinal);
+        Size = string.Create(CultureInfo.InvariantCulture, $"{monitor.Bounds.Width} x {monitor.Bounds.Height}");
         _isWhitelisted = isWhitelisted;
     }
 
@@ -22,10 +26,88 @@ public sealed class MonitorChoice : ObservableObject
 
     public string Detail { get; }
 
+    /// <summary>Where the monitor sits on the desktop, which is also where it sits on the map.</summary>
+    public Rectangle Bounds { get; }
+
+    /// <summary>Just the number, the one the Identify monitors button flashes on screen.</summary>
+    public string Number { get; }
+
+    public string Size { get; }
+
+    public double MapLeft { get; private set; }
+
+    public double MapTop { get; private set; }
+
+    public double MapWidth { get; private set; }
+
+    public double MapHeight { get; private set; }
+
+    public double MapCorner { get; private set; }
+
+    public double MapStroke { get; private set; }
+
+    public double NumberFontSize { get; private set; }
+
+    public double SizeFontSize { get; private set; }
+
+    /// <summary>Whether the tile is wide enough to print the resolution across it.</summary>
+    public bool SizeFits { get; private set; }
+
+    /// <summary>
+    /// Shifts the monitor into a map whose origin is the top left of <paramref name="union"/>, and
+    /// works out the tile's trimmings.
+    /// </summary>
+    /// <remarks>
+    /// The text and the stroke are sized against the whole desktop rather than against this one
+    /// monitor. The window scales the finished map down to fit, by roughly the height of the map
+    /// area over the height of the desktop, so sizing against the desktop is what makes a number
+    /// come out the same number of pixels whether the desktop is 1080 tall or 4000.
+    /// </remarks>
+    public void PlaceOnMap(Rectangle union)
+    {
+        var span = Math.Max(1, union.Height);
+
+        // A small gap around each monitor, so two that touch still read as two.
+        var inset = span * 0.006;
+
+        MapLeft = Bounds.X - union.X + inset;
+        MapTop = Bounds.Y - union.Y + inset;
+        MapWidth = Math.Max(1, Bounds.Width - (2 * inset));
+        MapHeight = Math.Max(1, Bounds.Height - (2 * inset));
+
+        MapCorner = span * 0.012;
+        MapStroke = span * 0.005;
+        NumberFontSize = span * 0.13;
+        SizeFontSize = span * 0.05;
+
+        // A tall narrow monitor has no room for "682 x 2560" across it, and a clipped label looks
+        // like a bug. Digits in this font run to about half an em, so this is close enough to tell
+        // the difference between fits and does not.
+        SizeFits = MapWidth > SizeFontSize * 0.55 * Size.Length * 1.1;
+
+        Raise(nameof(MapLeft));
+        Raise(nameof(MapTop));
+        Raise(nameof(MapWidth));
+        Raise(nameof(MapHeight));
+    }
+
     public bool IsWhitelisted
     {
         get => _isWhitelisted;
         set => Set(ref _isWhitelisted, value);
+    }
+
+    /// <summary>
+    /// The line that identifies the row. The display number comes first, because that is what the
+    /// Identify monitors button flashes on screen, followed by the make and model when the panel
+    /// reports one.
+    /// </summary>
+    public static string Headline(ConnectedMonitor monitor)
+    {
+        var display = FriendlyName(monitor.DeviceName);
+        return string.IsNullOrWhiteSpace(monitor.HardwareName)
+            ? display
+            : $"{display}  ·  {monitor.HardwareName}";
     }
 
     /// <summary>Turns <c>\\.\DISPLAY2</c> into <c>Display 2</c>.</summary>
@@ -97,8 +179,15 @@ public sealed class SettingsViewModel : ObservableObject
 
         Monitors = new ObservableCollection<MonitorChoice>(
             connected.Select(monitor => new MonitorChoice(monitor, settings.IsWhitelisted(monitor.DeviceName))));
+
+        // The map is drawn in desktop coordinates and scaled to fit by the window, so the monitors
+        // only need shifting so the top left of the desktop is the origin.
+        var union = MonitorLayout.Union(connected);
+        MapWidth = union.Width;
+        MapHeight = union.Height;
         foreach (var monitor in Monitors)
         {
+            monitor.PlaceOnMap(union);
             monitor.PropertyChanged += (_, _) => IsDirty = true;
         }
 
@@ -170,6 +259,11 @@ public sealed class SettingsViewModel : ObservableObject
     public string ScreensaverPath => _selectedScreensaver.Path;
 
     public bool HasMonitors => Monitors.Count > 0;
+
+    /// <summary>The size of the whole desktop, which is the coordinate space the map is drawn in.</summary>
+    public double MapWidth { get; }
+
+    public double MapHeight { get; }
 
     public bool IsDirty
     {

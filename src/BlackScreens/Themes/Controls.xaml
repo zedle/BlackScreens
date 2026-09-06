@@ -403,6 +403,62 @@
   <Geometry x:Key="IconAbout">M8,1.6 A6.4,6.4 0 1 0 8.01,1.6 Z M8,7.2 V11.6 M8,4.4 V5.4</Geometry>
 
 
+  <!--
+    One monitor on the arrangement map. Everything is drawn with plain doubles, the shape's radius
+    and stroke rather than a Border's CornerRadius and BorderThickness, so the sizes can come
+    straight off the view model without dragging WPF types into it.
+  -->
+  <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+  <Style x:Key="MonitorTile" TargetType="ToggleButton">
+    <Setter Property="Focusable" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToggleButton">
+          <Grid Background="Transparent">
+            <Rectangle x:Name="Tile"
+                       Fill="{DynamicResource SurfaceAltBrush}"
+                       Stroke="{DynamicResource LineStrongBrush}"
+                       StrokeThickness="{Binding MapStroke}"
+                       RadiusX="{Binding MapCorner}"
+                       RadiusY="{Binding MapCorner}" />
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock x:Name="Number"
+                         Text="{Binding Number}"
+                         FontSize="{Binding NumberFontSize}"
+                         Foreground="{DynamicResource TextBrush}"
+                         HorizontalAlignment="Center" />
+              <TextBlock x:Name="Size"
+                         Text="{Binding Size}"
+                         FontSize="{Binding SizeFontSize}"
+                         Foreground="{DynamicResource MutedTextBrush}"
+                         Visibility="{Binding SizeFits, Converter={StaticResource BoolToVisibility}}"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <ControlTemplate.Triggers>
+            <!-- Checked means the monitor is kept, so it is the one lit up. -->
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Tile" Property="Fill" Value="{DynamicResource AccentBrush}" />
+              <Setter TargetName="Tile" Property="Stroke" Value="{DynamicResource AccentBrush}" />
+              <Setter TargetName="Number" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+              <Setter TargetName="Size" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Tile" Property="Stroke" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Tile" Property="Stroke" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+
   <Style x:Key="NavList" TargetType="ListBox">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />

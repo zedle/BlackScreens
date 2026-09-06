@@ -35,6 +35,9 @@ public static class MonitorEnumerator
     {
         var monitors = new List<ConnectedMonitor>();
 
+        // Read once rather than per monitor, since it walks the registry.
+        var hardware = MonitorHardware.NamesByDevice();
+
         NativeMethods.EnumDisplayMonitors(0, 0, (hMonitor, _, _, _) =>
         {
             if (hMonitor == 0)
@@ -68,7 +71,8 @@ public static class MonitorEnumerator
 
             monitors.Add(new ConnectedMonitor(name, bounds)
             {
-                IsPrimary = (info.dwFlags & NativeMethods.MonitorinfofPrimary) != 0
+                IsPrimary = (info.dwFlags & NativeMethods.MonitorinfofPrimary) != 0,
+                HardwareName = hardware.TryGetValue(name, out var model) ? model : null
             });
             return true;
         }, 0);

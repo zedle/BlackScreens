@@ -210,6 +210,7 @@
         <Grid x:Name="PageMonitors" Margin="28,26,28,26" Visibility="Collapsed">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
@@ -220,7 +221,43 @@
                        Text="Checked monitors never go black. Use this for a chat or dashboard screen you want to keep." />
           </StackPanel>
 
-          <Border Grid.Row="1" Style="{StaticResource Card}" Padding="8" Margin="0">
+          <!--
+            The arrangement, laid out the way the monitors really sit. The canvas is sized in desktop
+            coordinates and the Viewbox scales the whole thing down to fit, so no pixel arithmetic is
+            needed here or in the view model. Clicking a monitor is the same as ticking its box.
+          -->
+          <Border Grid.Row="1" Style="{StaticResource Card}" Padding="12" Margin="0,0,0,10" Height="128">
+            <Viewbox Stretch="Uniform" StretchDirection="Both">
+              <ItemsControl ItemsSource="{Binding Monitors}"
+                            Width="{Binding MapWidth}"
+                            Height="{Binding MapHeight}"
+                            AutomationProperties.Name="Monitor arrangement">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                  <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding MapLeft}" />
+                    <Setter Property="Canvas.Top" Value="{Binding MapTop}" />
+                  </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <ToggleButton Style="{StaticResource MonitorTile}"
+                                  Width="{Binding MapWidth}"
+                                  Height="{Binding MapHeight}"
+                                  IsChecked="{Binding IsWhitelisted, Mode=TwoWay}"
+                                  ToolTip="{Binding Title}"
+                                  AutomationProperties.Name="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Viewbox>
+          </Border>
+
+          <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8" Margin="0">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
               <ItemsControl ItemsSource="{Binding Monitors}">
                 <ItemsControl.ItemTemplate>
@@ -239,7 +276,7 @@
             </ScrollViewer>
           </Border>
 
-          <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,14,0,0">
+          <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,14,0,0">
             <Button Content="Identify monitors" Click="IdentifyMonitorsClick" />
             <TextBlock Style="{StaticResource Hint}"
                        VerticalAlignment="Center"

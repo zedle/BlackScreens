@@ -34,4 +34,14 @@ public sealed class MonitorChoiceTests
         Assert.True(new MonitorChoice(monitor, isWhitelisted: true).IsWhitelisted);
         Assert.False(new MonitorChoice(monitor, isWhitelisted: false).IsWhitelisted);
     }
+
+    [Fact]
+    public void The_headline_adds_the_make_and_model_when_the_panel_reports_one()
+    {
+        var plain = new ConnectedMonitor(@"\\.\DISPLAY2", new Rectangle(0, 0, 2560, 1440));
+        var known = plain with { HardwareName = "LG 27GL850" };
+
+        Assert.Equal("Display 2", MonitorChoice.Headline(plain));
+        Assert.Equal("Display 2  ·  LG 27GL850", MonitorChoice.Headline(known));
+    }
 }

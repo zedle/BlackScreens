@@ -36,6 +36,8 @@ pwsh scripts/publish.ps1
   - `GameDetector` and friends decide what should go black. This is pure logic over a snapshot of
     windows, with no Win32 calls and no UI, which is what makes it testable. Keep it that way.
   - `WindowEnumerator`, `MonitorEnumerator` and `NativeMethods` do the live Win32 scanning
+  - `MonitorHardware` reads the make and model out of each panel's EDID. The parsing is pure and
+    tested; only the lookup touches Win32 and the registry
   - `OverlayManager`, `OverlayForm` and `PlacedForm` put black windows on screens
   - `Updates/` checks GitHub for a newer release and installs it
   - `Ui/` is the WPF settings window, its view model and the theming
