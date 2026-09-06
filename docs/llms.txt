@@ -1,0 +1,37 @@
+# BlackScreens
+
+> A free, open source Windows tray app that blacks out the monitors you are not using while a
+> fullscreen or borderless game is running. The game keeps its monitor, the monitor with keyboard
+> focus stays clear, and every other screen goes dark until you alt tab back out. MIT licensed,
+> no account, no telemetry, no network access of any kind.
+
+## What it is
+
+- Platform: Windows 10 version 1809 or newer, 64 bit. Built on .NET 10 with WinForms overlays and a WPF settings window.
+- Install: a per user installer that needs no admin prompt, a single portable exe, or a small framework dependent zip.
+- Cost: free. Source is on GitHub under the MIT license.
+
+## How it decides what to cover
+
+A few times a second it looks at the visible top level windows. A window counts as a game when it is
+not cloaked, has no title bar or is a popup, fills its monitor to within two pixels, and its process
+is not on the denylist. By default only the foreground window can start a blackout, so a game you
+alt tabbed away from leaves the desktop alone. These monitors are never covered: the one the game is
+on, the one with keyboard focus, and any monitor whitelisted in settings.
+
+## Features
+
+- Solid black on the covered monitors, or a Windows screensaver run in preview mode inside the overlay
+- Per monitor whitelist, with an Identify button that flashes a number on every screen
+- Process denylist with program icons, so browsers, chat apps and the shell never count as a game
+- Pause from the tray menu or a global hotkey, Ctrl + Alt + B by default
+- Settings window follows the Windows light or dark theme and accent color
+- Correct on mixed DPI desktops, portrait screens and hot plugged displays
+
+## Links
+
+- [Website](https://zedle.github.io/BlackScreens/): screenshots, downloads and the current release
+- [Source code](https://github.com/zedle/BlackScreens): the full repository
+- [Downloads](https://github.com/zedle/BlackScreens/releases/latest): installer, portable exe and zip
+- [Readme](https://github.com/zedle/BlackScreens/blob/main/README.md): usage and build instructions
+- [Issues](https://github.com/zedle/BlackScreens/issues): bug reports and feature requests

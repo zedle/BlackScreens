@@ -1,0 +1,11 @@
+# Crawlers only read robots.txt from the root of a host. This project site lives at
+# zedle.github.io/BlackScreens/, so this file takes effect if the site ever moves to its own
+# domain. It is kept here so the rules travel with the site.
+
+User-agent: *
+Allow: /
+
+# Design notes and plans, useful in the repository, noise in a search index.
+Disallow: /superpowers/
+
+Sitemap: https://zedle.github.io/BlackScreens/sitemap.xml
