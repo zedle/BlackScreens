@@ -437,16 +437,58 @@ kbd {
 /* The dialog takes focus when it opens, so it must not draw a ring of its own. */
 .lightbox:focus { outline: none; }
 
+/* Wraps the picture only, so the step buttons sit against its edges and centre on it rather than
+   on the caption underneath. */
+.lightbox-frame {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+}
+
 .lightbox img {
   display: block;
   width: auto;
   height: auto;
-  max-width: min(1400px, 92vw);
+  /* Leaves room either side for the step buttons to sit off the picture. */
+  max-width: min(1400px, 84vw);
   max-height: 82vh;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   background: var(--surface);
+}
+
+.lightbox-step {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  padding: 0 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 27px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-step.prev { left: -56px; }
+.lightbox-step.next { right: -56px; }
+
+.lightbox-step:hover { border-color: var(--accent); }
+
+.lightbox-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lightbox-count {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
 }
 
 .lightbox-caption {
@@ -480,12 +522,16 @@ kbd {
   outline-offset: 2px;
 }
 
-/* On a narrow screen the corner button would sit off the edge. */
-@media (max-width: 640px) {
+/* On a narrow screen there is no room beside the picture, so the buttons move onto it and the
+   corner one comes inside the edge. */
+@media (max-width: 760px) {
   .lightbox-close {
     top: 6px;
     right: 6px;
   }
+
+  .lightbox-step.prev { left: 8px; }
+  .lightbox-step.next { right: 8px; }
 }
 
 /* How it works */

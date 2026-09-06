@@ -11,7 +11,7 @@
 <!-- The version has to change whenever styles.css does. The page and the stylesheet are
      cached separately for ten minutes each, so without it a browser can pair new markup
      with the previous stylesheet, which is what happened when the lightbox first shipped. -->
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=4">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Plain text summary for language models">
 
@@ -582,24 +582,37 @@
 </script>
 
 <dialog class="lightbox" data-lightbox tabindex="-1" aria-label="Screenshot">
-  <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&#215;</button>
-  <img data-lightbox-image alt="">
-  <p class="lightbox-caption" data-lightbox-caption></p>
+  <div class="lightbox-frame">
+    <img data-lightbox-image alt="">
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&#215;</button>
+    <button type="button" class="lightbox-step prev" data-lightbox-prev aria-label="Previous screenshot">&#8249;</button>
+    <button type="button" class="lightbox-step next" data-lightbox-next aria-label="Next screenshot">&#8250;</button>
+  </div>
+  <p class="lightbox-caption" data-lightbox-caption aria-live="polite"></p>
+  <p class="lightbox-count" data-lightbox-count></p>
 </dialog>
 
 <script>
-  // Click a screenshot to see it full size. The button around each image is added here rather than
-  // written into the markup, so with scripting off the shots stay ordinary images instead of
-  // controls that do nothing. <dialog> brings the backdrop, the Escape key and the focus trap with
-  // it, which is most of the work.
+  // Click a screenshot to see it full size, then walk the rest with the arrow keys or the buttons
+  // either side. The button around each image is added here rather than written into the markup, so
+  // with scripting off the shots stay ordinary images instead of controls that do nothing. <dialog>
+  // brings the backdrop, the Escape key and the focus trap with it, which is most of the work.
   (function () {
     var dialog = document.querySelector('[data-lightbox]');
     if (!dialog || typeof dialog.showModal !== 'function') return;
 
     var image = dialog.querySelector('[data-lightbox-image]');
     var caption = dialog.querySelector('[data-lightbox-caption]');
+    var count = dialog.querySelector('[data-lightbox-count]');
+    var previous = dialog.querySelector('[data-lightbox-prev]');
+    var next = dialog.querySelector('[data-lightbox-next]');
 
-    document.querySelectorAll('.shots img, .tray-shot img').forEach(function (shot) {
+    var shots = [].slice.call(document.querySelectorAll('.shots img, .tray-shot img'));
+    if (!shots.length) return;
+
+    var current = 0;
+
+    shots.forEach(function (shot, index) {
       var button = document.createElement('button');
       button.type = 'button';
       button.className = 'zoom';
@@ -609,24 +622,52 @@
       button.appendChild(shot);
 
       button.addEventListener('click', function () {
-        image.src = shot.currentSrc || shot.src;
-        image.alt = shot.alt;
-
-        var figure = button.closest('figure');
-        var text = figure && figure.querySelector('figcaption');
-        caption.textContent = text ? text.textContent : '';
-
+        show(index);
         dialog.showModal();
 
         // Without this the browser puts focus on the close button and paints its own focus ring
-        // over the corner of the picture. Focusing the dialog keeps Escape and tabbing working
-        // with nothing drawn on top of the shot.
+        // over the corner of the picture. Focusing the dialog keeps Escape, tabbing and the arrow
+        // keys working with nothing drawn on top of the shot.
         dialog.focus();
       });
     });
 
-    // A click that lands on the dialog itself, rather than on the image or the caption inside it,
-    // is a click on the area around them, which is the usual way out of a lightbox.
+    // Only one shot on the page means nothing to step through.
+    if (shots.length < 2) {
+      previous.hidden = true;
+      next.hidden = true;
+    }
+
+    function show(index) {
+      // Wrap around, so the arrow keys never dead end.
+      current = (index + shots.length) % shots.length;
+      var shot = shots[current];
+
+      image.src = shot.currentSrc || shot.src;
+      image.alt = shot.alt;
+
+      var figure = shot.closest('figure');
+      var text = figure && figure.querySelector('figcaption');
+      caption.textContent = text ? text.textContent : '';
+      count.textContent = shots.length > 1 ? (current + 1) + ' of ' + shots.length : '';
+    }
+
+    function step(by) {
+      show(current + by);
+    }
+
+    previous.addEventListener('click', function () { step(-1); });
+    next.addEventListener('click', function () { step(1); });
+
+    dialog.addEventListener('keydown', function (event) {
+      if (event.key === 'ArrowLeft') { step(-1); event.preventDefault(); }
+      else if (event.key === 'ArrowRight') { step(1); event.preventDefault(); }
+      else if (event.key === 'Home') { show(0); event.preventDefault(); }
+      else if (event.key === 'End') { show(shots.length - 1); event.preventDefault(); }
+    });
+
+    // A click that lands on the dialog itself, rather than on anything inside it, is a click on the
+    // area around the picture, which is the usual way out of a lightbox.
     dialog.addEventListener('click', function (event) {
       if (event.target === dialog) dialog.close();
     });
@@ -639,6 +680,7 @@
     dialog.addEventListener('close', function () {
       image.removeAttribute('src');
       caption.textContent = '';
+      count.textContent = '';
     });
   })();
 </script>
