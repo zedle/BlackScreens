@@ -128,6 +128,20 @@ The website is the [`docs/`](docs/) folder, served by GitHub Pages from `main` /
 plain HTML with no build step, and it reads the latest release from the GitHub API, so the version,
 download links, file sizes and release notes follow whatever was published last.
 
+## 🤝 Contributing
+
+Bug reports, ideas and pull requests are all welcome.
+
+- **Something broken?** [Open a bug report](https://github.com/zedle/BlackScreens/issues/new?template=bug_report.yml).
+  The monitor layout and the game involved matter more than anything else.
+- **Want it to do something?** [Open a feature request](https://github.com/zedle/BlackScreens/issues/new?template=feature_request.yml).
+- **Sending a patch?** [`CONTRIBUTING.md`](CONTRIBUTING.md) covers the layout, the conventions and
+  the few places where the code looks odd on purpose.
+- **Found a security problem?** Please [report it privately](https://github.com/zedle/BlackScreens/security/advisories/new)
+  rather than in an issue. See [`SECURITY.md`](SECURITY.md).
+
+Be decent to people while you are here: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
 ## 🤖 Credits
 
 Built with a lot of help from Claude. I decided what it should do and whether the result was any

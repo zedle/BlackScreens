@@ -1,0 +1,98 @@
+name: Bug report
+description: Something does not work the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Most BlackScreens bugs come down to a specific monitor layout or
+        a specific game, so the details below are worth more than they look.
+
+  - type: input
+    id: version
+    attributes:
+      label: BlackScreens version
+      description: Settings > About shows it, for example 1.0.0
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it
+      options:
+        - Installer (BlackScreens-setup.exe)
+        - Portable exe (BlackScreens-win-x64.exe)
+        - Framework dependent zip
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Press Win+R, run "winver", and paste what it says
+      placeholder: "Windows 11 24H2 (build 26100.1234)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start BlackScreens
+        2. Launch <game> in borderless fullscreen on <monitor>
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: monitors
+    attributes:
+      label: Your monitors
+      description: >
+        Settings > Monitors lists them with resolution, orientation and position. Copy those lines
+        here, and say which ones went black and which ones should have.
+      placeholder: |
+        Display 1  3840 x 2160 landscape, primary  at 0, 0
+        Display 2  2560 x 1440 landscape  at 3840, 0
+        Display 3  1080 x 1920 portrait  at 6400, 0
+    validations:
+      required: true
+
+  - type: input
+    id: game
+    attributes:
+      label: Game or program involved
+      description: If the problem only happens with one program, name it
+      placeholder: "Helldivers 2, borderless fullscreen"
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Error log
+      description: >
+        Settings > About > Open error log. Paste anything from around the time it went wrong. The log
+        holds file paths and process names from your machine, so read it before pasting.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am on the latest release
+          required: true
+        - label: I searched the existing issues
+          required: true

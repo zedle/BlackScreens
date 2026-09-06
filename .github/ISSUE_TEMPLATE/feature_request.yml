@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest something BlackScreens should do
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        BlackScreens tries to do one thing: keep the screens you are not gaming on out of your way.
+        Ideas that make that better have the best chance.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem
+      description: What are you trying to do, and what gets in the way today
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like it to do
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you tried instead
+      description: Other apps, settings, workarounds, and why they did not fit
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues
+          required: true

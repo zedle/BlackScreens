@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Website and downloads
+    url: https://zedle.github.io/BlackScreens/
+    about: Screenshots, the current release and what the app does
+  - name: Security issue
+    url: https://github.com/zedle/BlackScreens/security/advisories/new
+    about: Report a vulnerability privately rather than in a public issue
