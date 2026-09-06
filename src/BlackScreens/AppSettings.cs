@@ -52,6 +52,9 @@ public sealed class AppSettings
 
     public DateTimeOffset? LastUpdateCheckUtc { get; set; }
 
+    /// <summary>Whether the first run question about updates has been answered.</summary>
+    public bool AskedAboutUpdates { get; set; }
+
     public int HotkeyModifiers { get; set; } = DefaultHotkeyModifiers;
 
     public int HotkeyVirtualKey { get; set; } = DefaultHotkeyVirtualKey;

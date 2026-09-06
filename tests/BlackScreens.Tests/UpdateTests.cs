@@ -228,3 +228,25 @@ public sealed class UpdateServiceTests
         Assert.Equal("Version 1.2.0 is ready to install.", UpdateService.Describe(UpdateResult.Ready, update));
     }
 }
+
+public sealed class FirstRunTests
+{
+    [Fact]
+    public void Updates_start_off_and_unasked()
+    {
+        var settings = new AppSettings();
+
+        Assert.False(settings.AutoUpdate);
+        Assert.False(settings.AskedAboutUpdates);
+        Assert.Null(settings.LastUpdateCheckUtc);
+    }
+
+    [Fact]
+    public void The_update_choice_survives_a_save_and_load()
+    {
+        var saved = new AppSettings { AutoUpdate = true, AskedAboutUpdates = true }.Normalize();
+
+        Assert.True(saved.AutoUpdate);
+        Assert.True(saved.AskedAboutUpdates);
+    }
+}

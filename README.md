@@ -60,7 +60,9 @@ frames. If the chosen screensaver refuses to run, the monitor simply stays black
 
 ## 🔄 Updates
 
-Updates are off by default. Turn on **Check for updates automatically** on the About page and
+Updates are off by default. BlackScreens asks once, the first time it runs, whether you want
+them; saying nothing or closing that window leaves them off. You can also turn
+**Check for updates automatically** on or off at any time on the About page. When it is on,
 BlackScreens asks the GitHub releases API for this repository once a day. If there is a newer
 release it downloads the right file for how you installed it, an installed copy taking the
 installer and a portable copy taking the self contained exe, and installs it when no monitor is

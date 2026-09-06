@@ -22,6 +22,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
     private GameDetector _detector;
     private string? _screensaverPath;
     private SettingsWindow? _settingsWindow;
+    private FirstRunWindow? _firstRunWindow;
     private bool _paused;
     private bool _detectorFailing;
     private bool _rebuild;
@@ -96,6 +97,8 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
 
         StartupRegistration.Apply(_settings.StartWithWindows);
         UpdateTrayState();
+
+        AskAboutUpdatesOnce();
 
         _instance.OnActivationRequested(() => Post(OpenSettings));
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
@@ -196,6 +199,41 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
     }
 
     private void OnSessionEnding(object? sender, SessionEndingEventArgs e) => Cleanup();
+
+    /// <summary>
+    /// Puts the update question in front of the user once. Saying nothing leaves updates off, which
+    /// is also what closing the window does.
+    /// </summary>
+    private void AskAboutUpdatesOnce()
+    {
+        if (_settings.AskedAboutUpdates)
+        {
+            return;
+        }
+
+        try
+        {
+            var window = new FirstRunWindow();
+            _firstRunWindow = window;
+            window.Answered += (_, _) =>
+            {
+                _firstRunWindow = null;
+                _settings.AskedAboutUpdates = true;
+                _settings.AutoUpdate = window.AutoUpdateChosen;
+                _settings.Save();
+            };
+
+            window.Show();
+            window.Activate();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write($"First run question failed: {ex}");
+            _firstRunWindow = null;
+            _settings.AskedAboutUpdates = true;
+            _settings.Save();
+        }
+    }
 
     /// <summary>Checks for a new release, and installs it when nothing is in the way.</summary>
     private async Task PollForUpdateAsync()
@@ -419,6 +457,15 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             {
                 _settingsWindow = null;
                 window.Close();
+            }
+        });
+
+        Try(() =>
+        {
+            if (_firstRunWindow is { } prompt)
+            {
+                _firstRunWindow = null;
+                prompt.Close();
             }
         });
 
