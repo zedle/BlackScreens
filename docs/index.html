@@ -154,7 +154,11 @@
           goes dark until you alt tab back out.
         </p>
         <div class="cta">
-          <a class="button primary" data-repo-href="/releases/latest" href="#download">
+          <!-- Deliberately no data-repo-href: this goes to the download section further down the
+               page, where the three files are described and the right build for the visitor's
+               processor is already chosen. Sending it to the releases page instead drops someone
+               into a list of six files with no explanation of which is which. -->
+          <a class="button primary" href="#download">
             <i class="bi bi-windows" aria-hidden="true"></i>Download for Windows</a>
           <a class="button" data-repo href="#">
             <i class="bi bi-github" aria-hidden="true"></i>View source</a>
