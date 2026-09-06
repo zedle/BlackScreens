@@ -98,6 +98,12 @@ Section "Install"
   ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
   IntFmt $0 "0x%08X" $0
   WriteRegDWORD HKCU "${UNINSTKEY}" "EstimatedSize" "$0"
+
+  ; The in app updater runs this silently and wants the app back afterwards.
+  ${GetParameters} $R0
+  ${GetOptions} $R0 "/RESTART" $R1
+  IfErrors +2 0
+  Exec '"$INSTDIR\BlackScreens.exe" --updated'
 SectionEnd
 
 Section "Uninstall"

@@ -65,7 +65,8 @@
     "Optional Windows screensaver on the covered monitors instead of solid black",
     "Process denylist so browsers, chat apps and the shell never count as a game",
     "Global pause hotkey and a tray menu",
-    "No telemetry and no network access"
+    "Optional update check against GitHub releases, off by default",
+    "No telemetry, and nothing about the user is ever sent anywhere"
   ]
 }
 </script>
@@ -73,6 +74,40 @@
 <body>
 
 <a class="skip" href="#main">Skip to content</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-detect" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/><circle cx="12" cy="12" r="2.2"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 2.5 20 5.5v6c0 5-3.4 8.6-8 10.5-4.6-1.9-8-5.5-8-10.5v-6Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>
+  </symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24">
+    <path d="M20 14.5A8.6 8.6 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>
+  </symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>
+  </symbol>
+  <symbol id="i-monitors" viewBox="0 0 24 24">
+    <rect x="2" y="4" width="13" height="9.5" rx="1.5"/><path d="M8.5 13.5V17M5.5 17h6"/><path d="M18 7h4v8h-4"/>
+  </symbol>
+  <symbol id="i-update" viewBox="0 0 24 24">
+    <path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 3v4h-4"/><path d="M12 8v5.5M9.5 11l2.5 2.5 2.5-2.5"/>
+  </symbol>
+  <symbol id="i-code" viewBox="0 0 24 24">
+    <path d="m8 8-4.5 4 4.5 4M16 8l4.5 4-4.5 4M13.5 5l-3 14"/>
+  </symbol>
+  <symbol id="i-installer" viewBox="0 0 24 24">
+    <path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/>
+  </symbol>
+  <symbol id="i-portable" viewBox="0 0 24 24">
+    <path d="M6 3h7.5L19 8.5V21H6Z"/><path d="M13.5 3v5.5H19"/><path d="M12 11v6M9.5 14.5 12 17l2.5-2.5"/>
+  </symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24">
+    <path d="m12 3 8.5 4.5L12 12 3.5 7.5Z"/><path d="m3.5 12.5 8.5 4.5 8.5-4.5"/>
+  </symbol>
+</svg>
+
 
 <header class="site-header">
   <div class="wrap header-inner">
@@ -112,7 +147,7 @@
           <a class="button" data-repo href="#">View source</a>
         </div>
         <p class="release-line" data-release-line hidden></p>
-        <p class="fineprint">Free and open source, MIT licensed. No account, no telemetry, no network access.</p>
+        <p class="fineprint">Free and open source, MIT licensed. No account and no telemetry.</p>
       </div>
 
       <figure class="hero-figure" aria-labelledby="hero-figure-caption">
@@ -158,6 +193,7 @@
       <div class="grid">
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-detect"/></svg>
           <h3>Knows a game when it sees one</h3>
           <p>
             Detects fullscreen and borderless windows by their real window style and geometry, not by
@@ -167,6 +203,7 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-shield"/></svg>
           <h3>Never covers the wrong screen</h3>
           <p>
             The game's monitor stays clear, the monitor holding keyboard focus stays clear, and any
@@ -176,6 +213,7 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-moon"/></svg>
           <h3>Black, or a screensaver</h3>
           <p>
             Covered monitors go solid black by default. Prefer some motion? Point BlackScreens at any
@@ -184,6 +222,7 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-pause"/></svg>
           <h3>Out of the way</h3>
           <p>
             Lives in the tray. Pause with <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> or from the
@@ -193,6 +232,7 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-monitors"/></svg>
           <h3>Mixed DPI and odd layouts</h3>
           <p>
             Overlays are positioned in raw screen pixels, so a 4K monitor at 150 percent next to a
@@ -202,9 +242,21 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-update"/></svg>
+          <h3>Updates on your terms</h3>
+          <p>
+            Off until you turn it on. Once you do, BlackScreens asks GitHub once a day whether there
+            is a newer release, downloads it, and installs it at a moment when no monitor is blacked
+            out, so it never restarts on you mid game. That check is the only network request it
+            makes.
+          </p>
+        </article>
+
+        <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-code"/></svg>
           <h3>Yours to inspect</h3>
           <p>
-            MIT licensed, no installer bundles, no analytics, no network calls of any kind. Settings
+            MIT licensed, no installer bundles, no analytics, nothing about you sent anywhere. Settings
             are a readable JSON file under <code>%LocalAppData%\BlackScreens</code>.
           </p>
         </article>
@@ -276,16 +328,19 @@
 
       <div class="downloads">
         <a class="download" data-asset="setup" data-repo-href="/releases/latest" href="#">
-          <span class="download-name">Installer<span class="asset-size" data-asset-size></span></span>
-          <span class="download-detail">Installs into your user profile, so there is no admin prompt. Uninstalls cleanly from Add or remove programs.</span>
+          <svg class="download-icon" aria-hidden="true"><use href="#i-installer"/></svg>
+          <span class="download-text"><span class="download-name">Installer<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">Installs into your user profile, so there is no admin prompt. Uninstalls cleanly from Add or remove programs.</span></span>
         </a>
         <a class="download" data-asset="portable" data-repo-href="/releases/latest" href="#">
-          <span class="download-name">Portable<span class="asset-size" data-asset-size></span></span>
-          <span class="download-detail">One file, nothing to install, nothing else to download.</span>
+          <svg class="download-icon" aria-hidden="true"><use href="#i-portable"/></svg>
+          <span class="download-text"><span class="download-name">Portable<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">One file, nothing to install, nothing else to download.</span></span>
         </a>
         <a class="download" data-asset="runtime" data-repo-href="/releases/latest" href="#">
-          <span class="download-name">Framework dependent<span class="asset-size" data-asset-size></span></span>
-          <span class="download-detail">A much smaller zip that needs the .NET 10 Desktop Runtime already installed.</span>
+          <svg class="download-icon" aria-hidden="true"><use href="#i-layers"/></svg>
+          <span class="download-text"><span class="download-name">Framework dependent<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">A much smaller zip that needs the .NET 10 Desktop Runtime already installed.</span></span>
         </a>
       </div>
 

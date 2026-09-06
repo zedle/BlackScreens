@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using BlackScreens.Updates;
 using System.Windows;
 using System.Windows.Input;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -11,16 +12,22 @@ public partial class SettingsWindow : Window
 {
     private readonly AppSettings _settings;
     private readonly IReadOnlyList<ConnectedMonitor> _connected;
+    private readonly UpdateService _updates;
     private readonly Func<bool> _onSaved;
     private readonly SettingsViewModel _model;
     private readonly AppTheme _themeOnOpen;
     private bool _savedOnce;
     private bool _closingConfirmed;
 
-    public SettingsWindow(AppSettings settings, IReadOnlyList<ConnectedMonitor> connected, Func<bool> onSaved)
+    public SettingsWindow(
+        AppSettings settings,
+        IReadOnlyList<ConnectedMonitor> connected,
+        UpdateService updates,
+        Func<bool> onSaved)
     {
         _settings = settings;
         _connected = connected;
+        _updates = updates;
         _onSaved = onSaved;
         _model = new SettingsViewModel(settings, connected);
         _themeOnOpen = AppThemes.Parse(settings.Theme);
@@ -38,6 +45,7 @@ public partial class SettingsWindow : Window
         VersionText.Text = $"BlackScreens {AppInfo.Version}";
         SignatureText.Text = AppInfo.SignatureSummary();
         SettingsPathText.Text = $"Settings: {AppSettings.FilePath}";
+        ShowPendingUpdate();
         LogPathText.Text = $"Error log: {ErrorLog.FilePath}";
         UpdateStatus();
     }
@@ -245,6 +253,60 @@ public partial class SettingsWindow : Window
     }
 
     private void IdentifyMonitorsClick(object sender, RoutedEventArgs e) => MonitorIdentifier.Flash();
+
+    private void ShowPendingUpdate()
+    {
+        if (_updates.Pending is not { } update)
+        {
+            return;
+        }
+
+        InstallUpdateButton.Content = $"Restart and install {update.Version}";
+        InstallUpdateButton.Visibility = Visibility.Visible;
+        UpdateStatusText.Text = UpdateService.Describe(UpdateResult.Ready, update);
+    }
+
+    private async void CheckForUpdatesClick(object sender, RoutedEventArgs e)
+    {
+        CheckUpdateButton.IsEnabled = false;
+        UpdateStatusText.Text = "Checking...";
+
+        try
+        {
+            var result = await _updates.CheckAsync(manual: true);
+            UpdateStatusText.Text = UpdateService.Describe(result, _updates.Pending);
+            ShowPendingUpdate();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write($"Manual update check failed: {ex}");
+            UpdateStatusText.Text = "The update check did not work. See the error log.";
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
+    private void InstallUpdateClick(object sender, RoutedEventArgs e)
+    {
+        if (_model.IsDirty && !Save())
+        {
+            return;
+        }
+
+        UpdateStatusText.Text = "Installing...";
+        if (_updates.Apply())
+        {
+            // Ends the tray app's message loop, which releases the single instance mutex before the
+            // replacement build asks for it.
+            System.Windows.Forms.Application.Exit();
+        }
+        else
+        {
+            UpdateStatusText.Text = "The update could not be installed. See the error log.";
+        }
+    }
 
     private void OpenDataFolderClick(object sender, RoutedEventArgs e) => AppInfo.OpenDataFolder();
 

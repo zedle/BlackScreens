@@ -328,6 +328,26 @@
 
             <Border Style="{StaticResource Card}">
               <StackPanel>
+                <TextBlock Text="Updates" Style="{StaticResource FieldLabel}" />
+                <CheckBox Content="Check for updates automatically" IsChecked="{Binding AutoUpdate}" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Margin="28,6,0,0"
+                           Text="Off by default. When on, BlackScreens asks GitHub once a day whether there is a newer release, downloads it, and installs it when no monitor is blacked out. This is the only time the app uses the network, and nothing about you is sent." />
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                  <Button x:Name="CheckUpdateButton" Content="Check now" Click="CheckForUpdatesClick" />
+                  <Button x:Name="InstallUpdateButton"
+                          Content="Restart and install"
+                          Margin="10,0,0,0"
+                          Visibility="Collapsed"
+                          Style="{StaticResource AccentButton}"
+                          Click="InstallUpdateClick" />
+                </StackPanel>
+                <TextBlock x:Name="UpdateStatusText" Style="{StaticResource Hint}" Margin="0,10,0,0" />
+              </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+              <StackPanel>
                 <TextBlock Text="Files" Style="{StaticResource FieldLabel}" />
                 <TextBlock x:Name="SettingsPathText" Style="{StaticResource Hint}" />
                 <TextBlock x:Name="LogPathText" Style="{StaticResource Hint}" Margin="0,4,0,0" />

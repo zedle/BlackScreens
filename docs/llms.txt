@@ -3,13 +3,15 @@
 > A free, open source Windows tray app that blacks out the monitors you are not using while a
 > fullscreen or borderless game is running. The game keeps its monitor, the monitor with keyboard
 > focus stays clear, and every other screen goes dark until you alt tab back out. MIT licensed,
-> no account, no telemetry, no network access of any kind.
+> no account and no telemetry. The one network request it can make is an optional check for a
+> newer release, which is off until the user turns it on.
 
 ## What it is
 
 - Platform: Windows 10 version 1809 or newer, 64 bit. Built on .NET 10 with WinForms overlays and a WPF settings window.
 - Install: a per user installer that needs no admin prompt, a single portable exe, or a small framework dependent zip.
 - Cost: free. Source is on GitHub under the MIT license.
+- Updates: optional. Off by default. When switched on it asks the GitHub releases API once a day, downloads the new build and installs it while no monitor is blacked out.
 
 ## How it decides what to cover
 

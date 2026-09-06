@@ -12,7 +12,8 @@ clear, and everything else goes dark so nothing pulls your eye mid fight.
 - 🌙 Covered monitors go solid black, or run a Windows screensaver if you prefer
 - ⏸️ Pause from the tray or with `Ctrl + Alt + B`
 - 🎨 Themed settings window that follows Windows dark mode
-- 🔒 No account, no telemetry, no network access
+- 🔄 Optional update check, off until you switch it on, and the only time it uses the network
+- 🔒 No account, no telemetry, nothing about you ever leaves the machine
 
 ## 📥 Install
 
@@ -44,7 +45,7 @@ Settings pages:
 - **Blackout** solid black or a Windows screensaver on the covered monitors, with Configure and Test
 - **Monitors** which monitors never go black, with an Identify button that flashes a number on each screen
 - **Denylist** processes that never count as the game, with icons and a Browse button to pick a program
-- **About** version, signature, and the settings and log file locations
+- **About** version, signature, updates, and the settings and log file locations
 
 Blackout is put on hold while the settings window is open so it cannot cover what you are editing.
 
@@ -56,6 +57,18 @@ never touched. BlackScreens hosts the screensaver in preview mode inside its own
 mechanism the Windows personalization dialog uses, so nothing takes over the desktop and no mouse
 movement can dismiss it mid game. A busy screensaver does use the GPU, so a heavy one can cost you
 frames. If the chosen screensaver refuses to run, the monitor simply stays black.
+
+## 🔄 Updates
+
+Updates are off by default. Turn on **Check for updates automatically** on the About page and
+BlackScreens asks the GitHub releases API for this repository once a day. If there is a newer
+release it downloads the right file for how you installed it, an installed copy taking the
+installer and a portable copy taking the self contained exe, and installs it when no monitor is
+blacked out and the settings window is closed, so it will not restart on you mid game. **Check now**
+on the same page does it on demand.
+
+That request is the only network access in the app. It carries nothing but a `BlackScreens/<version>`
+user agent, and a download that arrives the wrong size is thrown away rather than installed.
 
 ## 🔍 How detection works
 

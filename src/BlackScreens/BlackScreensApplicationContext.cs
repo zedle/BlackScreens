@@ -1,4 +1,5 @@
 using BlackScreens.Ui;
+using BlackScreens.Updates;
 using Microsoft.Win32;
 
 namespace BlackScreens;
@@ -13,6 +14,8 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem _whitelistMenu;
     private readonly ContextMenuStrip _menu;
     private readonly System.Windows.Forms.Timer _timer;
+    private readonly System.Windows.Forms.Timer _updateTimer;
+    private readonly UpdateService _updates;
     private readonly HotkeyWindow _hotkey;
     private readonly Control _sync = new();
     private IReadOnlyList<ConnectedMonitor> _monitors;
@@ -29,8 +32,11 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
         _instance = instance;
         _ = _sync.Handle;
 
+        UpdateService.CleanUp();
+
         _monitors = MonitorEnumerator.CaptureAll();
         _settings = AppSettings.Load(_monitors);
+        _updates = new UpdateService(_settings);
         _detector = CreateDetector();
         _screensaverPath = _settings.GetScreensaverPath();
 
@@ -81,6 +87,12 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
         };
         _timer.Tick += (_, _) => Tick();
         _timer.Start();
+
+        // First look shortly after start, then every half hour the service decides whether a day
+        // has passed. Nothing leaves the machine while automatic updates are off.
+        _updateTimer = new System.Windows.Forms.Timer { Interval = 60_000 };
+        _updateTimer.Tick += async (_, _) => await PollForUpdateAsync().ConfigureAwait(true);
+        _updateTimer.Start();
 
         StartupRegistration.Apply(_settings.StartWithWindows);
         UpdateTrayState();
@@ -148,7 +160,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             _overlays.HideAll();
 
             _monitors = MonitorEnumerator.CaptureAll();
-            var window = new SettingsWindow(_settings, _monitors, SaveAndApplySettings);
+            var window = new SettingsWindow(_settings, _monitors, _updates, SaveAndApplySettings);
             window.Closed += (_, _) =>
             {
                 _settingsWindow = null;
@@ -184,6 +196,54 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
     }
 
     private void OnSessionEnding(object? sender, SessionEndingEventArgs e) => Cleanup();
+
+    /// <summary>Checks for a new release, and installs it when nothing is in the way.</summary>
+    private async Task PollForUpdateAsync()
+    {
+        _updateTimer.Interval = 30 * 60_000;
+
+        // The build this one replaced is usually still locked at startup, so try again now.
+        UpdateService.RemovePreviousBuild();
+
+        if (_cleaned || !_settings.AutoUpdate)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_updates.Pending is null && await _updates.CheckAsync(manual: false).ConfigureAwait(true)
+                != UpdateResult.Ready)
+            {
+                return;
+            }
+
+            InstallPendingUpdateIfIdle();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write($"Update poll failed: {ex}");
+        }
+    }
+
+    /// <summary>
+    /// Restarting mid game would be the worst possible moment, so an update waits until no monitor
+    /// is blacked out and the settings window is closed.
+    /// </summary>
+    private void InstallPendingUpdateIfIdle()
+    {
+        if (_updates.Pending is not { } update || _overlays.Count > 0 || _settingsWindow is not null)
+        {
+            return;
+        }
+
+        Notify($"Updating BlackScreens to {update.Version}.", ToolTipIcon.Info);
+
+        if (_updates.Apply())
+        {
+            Quit();
+        }
+    }
 
     private void Post(Action action)
     {
@@ -311,13 +371,13 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
         _icon.Text = _paused ? "BlackScreens - paused" : "BlackScreens - watching for games";
     }
 
-    private void Notify(string message)
+    private void Notify(string message, ToolTipIcon icon = ToolTipIcon.Warning)
     {
         try
         {
             _icon.BalloonTipTitle = "BlackScreens";
             _icon.BalloonTipText = message;
-            _icon.BalloonTipIcon = ToolTipIcon.Warning;
+            _icon.BalloonTipIcon = icon;
             _icon.ShowBalloonTip(5000);
         }
         catch (Exception ex)
@@ -349,6 +409,8 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
         {
             _timer.Stop();
             _timer.Dispose();
+            _updateTimer.Stop();
+            _updateTimer.Dispose();
         });
 
         Try(() =>

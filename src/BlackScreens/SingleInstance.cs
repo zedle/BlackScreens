@@ -14,9 +14,28 @@ internal sealed class SingleInstance : IDisposable
     private RegisteredWaitHandle? _registration;
     private bool _disposed;
 
-    public SingleInstance()
+    /// <summary>
+    /// Waits <paramref name="waitForPrevious"/> for an existing instance to go away before deciding
+    /// this one is a duplicate. An update restarts the app while the old build is still shutting
+    /// down, and without the wait the new build would mistake itself for a second launch.
+    /// </summary>
+    public SingleInstance(TimeSpan waitForPrevious = default)
     {
         _mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
+
+        if (!createdNew && waitForPrevious > TimeSpan.Zero)
+        {
+            try
+            {
+                createdNew = _mutex.WaitOne(waitForPrevious);
+            }
+            catch (AbandonedMutexException)
+            {
+                // The previous instance died without releasing it, which is fine: we own it now.
+                createdNew = true;
+            }
+        }
+
         IsFirst = createdNew;
         _activate = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateName);
     }

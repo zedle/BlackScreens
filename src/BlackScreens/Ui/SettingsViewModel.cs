@@ -58,6 +58,7 @@ public sealed class MonitorChoice : ObservableObject
 public sealed class SettingsViewModel : ObservableObject
 {
     private bool _startWithWindows;
+    private bool _autoUpdate;
     private AppTheme _theme;
     private bool _backgroundGames;
     private bool _alwaysClearFocusedMonitor;
@@ -79,6 +80,7 @@ public sealed class SettingsViewModel : ObservableObject
         IReadOnlyList<Screensaver>? screensavers = null)
     {
         _startWithWindows = settings.StartWithWindows;
+        _autoUpdate = settings.AutoUpdate;
         _theme = AppThemes.Parse(settings.Theme);
         _backgroundGames = settings.BackgroundGames;
         _alwaysClearFocusedMonitor = settings.GetAlwaysClearFocusedMonitor();
@@ -179,6 +181,12 @@ public sealed class SettingsViewModel : ObservableObject
     {
         get => _startWithWindows;
         set => Track(ref _startWithWindows, value);
+    }
+
+    public bool AutoUpdate
+    {
+        get => _autoUpdate;
+        set => Track(ref _autoUpdate, value);
     }
 
     public bool BackgroundGames
@@ -373,6 +381,7 @@ public sealed class SettingsViewModel : ObservableObject
     public void ApplyTo(AppSettings settings)
     {
         settings.StartWithWindows = StartWithWindows;
+        settings.AutoUpdate = AutoUpdate;
         settings.Theme = AppThemes.Format(Theme);
         settings.BackgroundGames = BackgroundGames;
         settings.AlwaysClearFocusedMonitor = AlwaysClearFocusedMonitor;

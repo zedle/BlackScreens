@@ -44,6 +44,14 @@ public sealed class AppSettings
     /// <summary>Screensaver to run. Empty means follow the Windows personalization setting.</summary>
     public string ScreensaverPath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Off by default. When on, BlackScreens asks GitHub once a day whether there is a newer
+    /// release and installs it. This is the only time the app touches the network.
+    /// </summary>
+    public bool AutoUpdate { get; set; }
+
+    public DateTimeOffset? LastUpdateCheckUtc { get; set; }
+
     public int HotkeyModifiers { get; set; } = DefaultHotkeyModifiers;
 
     public int HotkeyVirtualKey { get; set; } = DefaultHotkeyVirtualKey;
