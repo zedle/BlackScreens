@@ -1,99 +1,137 @@
-$ErrorActionPreference = "Stop"
+<#
+.SYNOPSIS
+  Regenerates app.ico, the icon used for the exe, the settings window and the tray.
+
+.DESCRIPTION
+  Every frame is drawn from the one layout below, so the 16 pixel icon in the notification area is
+  the same picture as the 256 pixel one in Explorer.
+
+  It did not used to be. The large frames were scaled down from icon-source.png, three landscape
+  monitors with thin bezels, while the 16 pixel frame was a separate hand drawn glyph of three
+  portrait monitors with heavy bezels. In the tray it read as a different app.
+
+  Scaling the artwork down on its own does not work either. The three monitors sit side by side, so
+  the art is a band three and a half times wider than it is tall, and at 16 pixels that leaves the
+  monitors about four pixels high and unreadable. The layout here is therefore a little taller and
+  chunkier than the artwork, and is drawn with integer rectangles at every size, so the small frames
+  stay crisp instead of being interpolated into mush.
+
+  icon-source.png stays in the repository as the reference the colours and proportions came from.
+
+  Run it after changing anything here:
+    pwsh src/BlackScreens/Assets/pack-icon.ps1
+#>
+$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $assets = $PSScriptRoot
-$srcPath = Join-Path $assets "icon-source.png"
-$icoPath = Join-Path $assets "app.ico"
+$icoPath = Join-Path $assets 'app.ico'
 
-function Get-OpaqueBounds([System.Drawing.Bitmap]$bmp) {
-    $minx = $bmp.Width; $miny = $bmp.Height; $maxx = -1; $maxy = -1
-    for ($y = 0; $y -lt $bmp.Height; $y++) {
-        for ($x = 0; $x -lt $bmp.Width; $x++) {
-            if ($bmp.GetPixel($x, $y).A -lt 16) { continue }
-            if ($x -lt $minx) { $minx = $x }
-            if ($y -lt $miny) { $miny = $y }
-            if ($x -gt $maxx) { $maxx = $x }
-            if ($y -gt $maxy) { $maxy = $y }
+# Sampled from icon-source.png so the redraw keeps the original palette.
+$script:Bezel = [System.Drawing.Color]::FromArgb(255, 193, 194, 196)
+$script:Stand = [System.Drawing.Color]::FromArgb(255, 152, 153, 155)
+$script:Base  = [System.Drawing.Color]::FromArgb(255, 190, 190, 191)
+$script:Dark  = [System.Drawing.Color]::FromArgb(255, 6, 6, 8)
+$script:LitA  = [System.Drawing.Color]::FromArgb(255, 55, 216, 255)   # cyan, top left
+$script:LitB  = [System.Drawing.Color]::FromArgb(255, 106, 108, 244)  # indigo, bottom right
+
+# PowerShell rounds halves to even by default, which makes sizes like 40 fall a pixel short.
+function Round-Away([double]$value) {
+    return [int][Math]::Round($value, [MidpointRounding]::AwayFromZero)
+}
+
+function Draw-Monitor {
+    param(
+        [System.Drawing.Graphics]$G,
+        [System.Drawing.Bitmap]$Bmp,
+        [int]$X, [int]$Y, [int]$W, [int]$H,
+        [int]$Bezel, [int]$StandH, [int]$BaseH,
+        [switch]$Lit
+    )
+
+    $frame = [System.Drawing.SolidBrush]::new($script:Bezel)
+    $G.FillRectangle($frame, $X, $Y, $W, $H)
+    $frame.Dispose()
+
+    $sx = $X + $Bezel
+    $sy = $Y + $Bezel
+    $sw = [Math]::Max(1, $W - (2 * $Bezel))
+    $sh = [Math]::Max(1, $H - (2 * $Bezel))
+
+    if ($Lit) {
+        # Filled a pixel at a time rather than with a gradient brush, which dithers badly over an
+        # area only a few pixels across.
+        for ($py = $sy; $py -lt ($sy + $sh); $py++) {
+            for ($px = $sx; $px -lt ($sx + $sw); $px++) {
+                if ($sw -le 1) { $tx = 0.5 } else { $tx = ($px - $sx) / ($sw - 1.0) }
+                if ($sh -le 1) { $ty = 0.5 } else { $ty = ($py - $sy) / ($sh - 1.0) }
+
+                # Mostly left to right, the way the artwork runs, with a little vertical drift.
+                $t = ($tx * 0.72) + ($ty * 0.28)
+                $r = [int][Math]::Round($script:LitA.R + (($script:LitB.R - $script:LitA.R) * $t))
+                $gc = [int][Math]::Round($script:LitA.G + (($script:LitB.G - $script:LitA.G) * $t))
+                $b = [int][Math]::Round($script:LitA.B + (($script:LitB.B - $script:LitA.B) * $t))
+                $Bmp.SetPixel($px, $py, [System.Drawing.Color]::FromArgb(255, $r, $gc, $b))
+            }
         }
     }
-    if ($maxx -lt 0) {
-        return [System.Drawing.Rectangle]::new(0, 0, $bmp.Width, $bmp.Height)
+    else {
+        $off = [System.Drawing.SolidBrush]::new($script:Dark)
+        $G.FillRectangle($off, $sx, $sy, $sw, $sh)
+        $off.Dispose()
     }
-    return [System.Drawing.Rectangle]::FromLTRB($minx, $miny, $maxx + 1, $maxy + 1)
+
+    # Stand and base, both centred under the panel.
+    $standW = [Math]::Max(1, (Round-Away ($W * 0.18)))
+    $baseW = [Math]::Max(($standW + 1), (Round-Away ($W * 0.37)))
+
+    $standBrush = [System.Drawing.SolidBrush]::new($script:Stand)
+    $G.FillRectangle($standBrush, ($X + [int](($W - $standW) / 2)), ($Y + $H), $standW, $StandH)
+    $standBrush.Dispose()
+
+    $baseBrush = [System.Drawing.SolidBrush]::new($script:Base)
+    $G.FillRectangle($baseBrush, ($X + [int](($W - $baseW) / 2)), ($Y + $H + $StandH), $baseW, $BaseH)
+    $baseBrush.Dispose()
 }
 
-function New-Cropped([System.Drawing.Bitmap]$source) {
-    $bounds = Get-OpaqueBounds $source
-    $pad = [Math]::Max(8, [int]([Math]::Max($bounds.Width, $bounds.Height) * 0.08))
-    $x = [Math]::Max(0, $bounds.X - $pad)
-    $y = [Math]::Max(0, $bounds.Y - $pad)
-    $r = [Math]::Min($source.Width, $bounds.Right + $pad)
-    $b = [Math]::Min($source.Height, $bounds.Bottom + $pad)
-    $rect = [System.Drawing.Rectangle]::FromLTRB($x, $y, $r, $b)
-    $cropped = New-Object System.Drawing.Bitmap $rect.Width, $rect.Height, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($cropped)
-    $g.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
-    $g.Clear([System.Drawing.Color]::Transparent)
-    $g.DrawImage($source, (New-Object System.Drawing.Rectangle 0, 0, $rect.Width, $rect.Height), $rect, [System.Drawing.GraphicsUnit]::Pixel)
-    $g.Dispose()
-    return $cropped
-}
+function New-Frame([int]$size) {
+    # The layout is described at 64 pixels and scaled from there: two 16 wide side monitors, a 24
+    # wide centre one, and a 4 wide gap either side of the centre. The panel heights give roughly
+    # the same landscape proportions as the artwork, 1.14 and 1.33 against its 1.26 and 1.47, while
+    # still rounding to something legible at 16 pixels.
+    $scale = $size / 64.0
 
-function New-Scaled([System.Drawing.Image]$source, [int]$size) {
+    $gap = [Math]::Max(1, (Round-Away (4 * $scale)))
+    $sideW = [Math]::Max(3, (Round-Away (16 * $scale)))
+    # Whatever is left, so the three monitors always fill the width exactly and stay symmetric.
+    $centreW = $size - (2 * $sideW) - (2 * $gap)
+
+    $centreH = [Math]::Max(4, (Round-Away (18 * $scale)))
+    $sideH = [Math]::Max(3, (Round-Away (14 * $scale)))
+    $standH = [Math]::Max(1, (Round-Away (4 * $scale)))
+    $baseH = [Math]::Max(1, (Round-Away (3 * $scale)))
+
+    # Panels sit on a common baseline, the way they do in the artwork, and the whole group is
+    # centred in the square.
+    $top = [int](($size - ($centreH + $standH + $baseH)) / 2)
+    $baseline = $top + $centreH
+
+    $bezel = [Math]::Max(1, (Round-Away ($sideW * 0.06)))
+
     $bmp = New-Object System.Drawing.Bitmap $size, $size, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($bmp)
-    $g.Clear([System.Drawing.Color]::Transparent)
-    $g.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceOver
-    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-
-    $scale = [Math]::Min($size / [double]$source.Width, $size / [double]$source.Height)
-    $w = [Math]::Max(1, [int]($source.Width * $scale))
-    $h = [Math]::Max(1, [int]($source.Height * $scale))
-    $x = [int](($size - $w) / 2)
-    $y = [int](($size - $h) / 2)
-    $g.DrawImage($source, $x, $y, $w, $h)
-    $g.Dispose()
-    return $bmp
-}
-
-function New-Tray16 {
-    $bmp = New-Object System.Drawing.Bitmap 16, 16, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.Clear([System.Drawing.Color]::Transparent)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::None
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
 
-    $frame = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(255, 196, 202, 212))
-    $off = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(255, 32, 36, 44))
-    $stand = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(255, 160, 166, 176))
+    Draw-Monitor -G $g -Bmp $bmp -X 0 -Y ($baseline - $sideH) -W $sideW -H $sideH `
+                 -Bezel $bezel -StandH $standH -BaseH $baseH
+    Draw-Monitor -G $g -Bmp $bmp -X ($sideW + $gap) -Y $top -W $centreW -H $centreH `
+                 -Bezel $bezel -StandH $standH -BaseH $baseH -Lit
+    Draw-Monitor -G $g -Bmp $bmp -X ($size - $sideW) -Y ($baseline - $sideH) -W $sideW -H $sideH `
+                 -Bezel $bezel -StandH $standH -BaseH $baseH
 
-    function Draw-Monitor([int]$x, [int]$y, [int]$w, [int]$h, [System.Drawing.Brush]$screen) {
-        $g.FillRectangle($frame, $x, $y, $w, $h)
-        $g.FillRectangle($screen, $x + 1, $y + 1, $w - 2, $h - 2)
-        $g.FillRectangle($stand, $x + [int]($w / 2) - 1, $y + $h, 2, 1)
-    }
-
-    Draw-Monitor 0 5 4 7 $off
-    Draw-Monitor 12 5 4 7 $off
-
-    $g.FillRectangle($frame, 5, 3, 6, 10)
-    for ($row = 4; $row -le 11; $row++) {
-        $t = ($row - 4) / 7.0
-        $r = [int](50 + (150 * $t))
-        $gc = [int](220 - (150 * $t))
-        $b = [int](255 - (30 * $t))
-        $brush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(255, $r, $gc, $b))
-        $g.FillRectangle($brush, 6, $row, 4, 1)
-        $brush.Dispose()
-    }
-    $g.FillRectangle($stand, 7, 13, 2, 1)
-    $bmp.SetPixel(8, 6, [System.Drawing.Color]::White)
-    $bmp.SetPixel(7, 7, [System.Drawing.Color]::White)
-    $bmp.SetPixel(8, 7, [System.Drawing.Color]::White)
-
-    $frame.Dispose(); $off.Dispose(); $stand.Dispose(); $g.Dispose()
+    $g.Dispose()
     return $bmp
 }
 
@@ -146,8 +184,9 @@ function Write-Ico([string]$path, $images) {
         foreach ($size in $sizes) {
             $len = ([byte[]]$images[$size]).Length
             $stored = [int]$size
-            $bw.Write([byte]($(if ($stored -ge 256) { 0 } else { $stored })))
-            $bw.Write([byte]($(if ($stored -ge 256) { 0 } else { $stored })))
+            if ($stored -ge 256) { $stored = 0 }
+            $bw.Write([byte]$stored)
+            $bw.Write([byte]$stored)
             $bw.Write([byte]0)
             $bw.Write([byte]0)
             $bw.Write([uint16]1)
@@ -169,26 +208,14 @@ function Write-Ico([string]$path, $images) {
     }
 }
 
-$source = [System.Drawing.Bitmap]::FromFile($srcPath)
+# 20, 24, 32 and 40 are the sizes the notification area asks for at 125, 150 and 200 per cent
+# scaling. Without them Windows picks a neighbour and rescales it, which is part of why the tray
+# icon looked soft.
 $images = @{}
-try {
-    $cropped = New-Cropped $source
-    try {
-        $tray = New-Tray16
-        try { $images[16] = Get-IcoImageBytes $tray } finally { $tray.Dispose() }
-
-        foreach ($size in 24, 32, 48, 64, 128, 256) {
-            $scaled = New-Scaled $cropped $size
-            try { $images[$size] = Get-IcoImageBytes $scaled } finally { $scaled.Dispose() }
-        }
-    }
-    finally {
-        $cropped.Dispose()
-    }
-
-    Write-Ico $icoPath $images
-    Write-Output "Wrote $icoPath ($((Get-Item $icoPath).Length) bytes)"
+foreach ($size in 16, 20, 24, 32, 40, 48, 64, 128, 256) {
+    $frame = New-Frame $size
+    try { $images[$size] = Get-IcoImageBytes $frame } finally { $frame.Dispose() }
 }
-finally {
-    $source.Dispose()
-}
+
+Write-Ico $icoPath $images
+Write-Output "Wrote $icoPath ($((Get-Item $icoPath).Length) bytes, $($images.Count) sizes)"
