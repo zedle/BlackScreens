@@ -9,7 +9,8 @@
   corners, is turned transparent.
 
   Run it with BlackScreens not already running. It starts the app, walks the settings pages, and
-  writes docs/assets/*.png.
+  writes docs/assets/*.png. Follow it with redact-about.ps1, which blurs the user name out of the
+  paths shown on the About page.
 #>
 [CmdletBinding()]
 param(
@@ -34,6 +35,7 @@ public static class Cap {
   [DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(IntPtr v);
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
   [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr h, int attr, out RECT r, int size);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
   [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
   public const int ExtendedFrameBounds = 9;
   public const uint RenderFullContent = 2;
@@ -45,14 +47,25 @@ public static class Cap {
 function Get-WindowImage {
     param([IntPtr]$Handle)
 
-    $rect = New-Object Cap+RECT
-    if ([Cap]::DwmGetWindowAttribute($Handle, [Cap]::ExtendedFrameBounds, [ref]$rect, 16) -ne 0) {
-        throw 'Could not measure the window.'
+    # PrintWindow draws from the window origin, which sits outside the visible frame because of the
+    # invisible resize border. Capture the whole window, then trim to what is actually on screen,
+    # otherwise the content is pushed right and a dark band appears down the left.
+    $full = New-Object Cap+RECT
+    if (-not [Cap]::GetWindowRect($Handle, [ref]$full)) { throw 'Could not measure the window.' }
+
+    $visible = New-Object Cap+RECT
+    if ([Cap]::DwmGetWindowAttribute($Handle, [Cap]::ExtendedFrameBounds, [ref]$visible, 16) -ne 0) {
+        $visible = $full
     }
 
-    $width = $rect.R - $rect.L
-    $height = $rect.B - $rect.T
-    $bitmap = New-Object System.Drawing.Bitmap $width, $height, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $fullWidth = $full.R - $full.L
+    $fullHeight = $full.B - $full.T
+    $offsetX = $visible.L - $full.L
+    $offsetY = $visible.T - $full.T
+    $width = $visible.R - $visible.L
+    $height = $visible.B - $visible.T
+
+    $bitmap = New-Object System.Drawing.Bitmap $fullWidth, $fullHeight, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 
     # A colour the interface never uses, so leftovers mark the pixels the window did not paint.
     $key = [System.Drawing.Color]::FromArgb(255, 255, 0, 255)
@@ -63,6 +76,13 @@ function Get-WindowImage {
     $graphics.ReleaseHdc($dc)
     $graphics.Dispose()
     if (-not $ok) { throw 'PrintWindow failed.' }
+
+    # Trim the invisible border away.
+    $trimmed = $bitmap.Clone(
+        (New-Object System.Drawing.Rectangle $offsetX, $offsetY, $width, $height),
+        [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $bitmap.Dispose()
+    $bitmap = $trimmed
 
     # Rounded corners leave the fill colour behind. Make those pixels transparent.
     $data = $bitmap.LockBits(
