@@ -32,7 +32,7 @@ on, the one with keyboard focus, and any monitor whitelisted in settings.
 
 ## Links
 
-- [Website](https://zedle.github.io/BlackScreens/): screenshots, downloads and the current release
+- [Website](https://blackscreens.app/): screenshots, downloads and the current release
 - [Source code](https://github.com/zedle/BlackScreens): the full repository
 - [Downloads](https://github.com/zedle/BlackScreens/releases/latest): installer, portable exe and zip
 - [Readme](https://github.com/zedle/BlackScreens/blob/main/README.md): usage and build instructions
