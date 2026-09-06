@@ -10,6 +10,8 @@ clear, and everything else goes dark so nothing pulls your eye mid fight.
   on the denylist
 - 🛡️ Keeps the game monitor, the focused monitor and any monitor you whitelist clear
 - 🌙 Covered monitors go solid black, or run a Windows screensaver if you prefer
+- 🎚️ Opacity slider, so a covered monitor can be seen through rather than hidden
+- 🔝 Keep chosen programs above the overlay, so a capture or chat window stays visible
 - ⏸️ Pause from the tray or with `Ctrl + Alt + B`
 - 🎨 Themed settings window that follows Windows dark mode
 - 🔄 Optional update check, off until you switch it on, and the only time it uses the network
@@ -49,9 +51,11 @@ Settings pages:
 
 - **General** start with Windows, theme, pause hotkey, how often detection runs
 - **Detection** whether background fullscreen counts, and whether the focused monitor is always kept clear
-- **Blackout** solid black or a Windows screensaver on the covered monitors, with Configure and Test
+- **Blackout** solid black or a Windows screensaver on the covered monitors, how opaque the black
+  is, and Configure and Test for the screensaver
 - **Monitors** which monitors never go black, with an Identify button that flashes a number on each screen
 - **Denylist** processes that never count as the game, with icons and a Browse button to pick a program
+- **On top** programs that stay visible above a blacked out monitor, empty by default
 - **About** version, signature, updates, and the settings and log file locations
 
 Blackout is put on hold while the settings window is open so it cannot cover what you are editing.
@@ -64,6 +68,18 @@ never touched. BlackScreens hosts the screensaver in preview mode inside its own
 mechanism the Windows personalization dialog uses, so nothing takes over the desktop and no mouse
 movement can dismiss it mid game. A busy screensaver does use the GPU, so a heavy one can cost you
 frames. If the chosen screensaver refuses to run, the monitor simply stays black.
+
+## 🔝 Keeping something visible
+
+The **On top** page lists programs that stay above a blacked out monitor, so a capture preview or a
+chat window can stay readable while everything around it goes dark. It is empty to start with.
+
+Entries on that page and on the denylist come in two kinds. Type a process name, `obs64`, and it
+covers every copy of that program. Use **Browse** and it adds that one exact executable, which is
+what you want when two builds share a name. Each row says which it is.
+
+A program is only held above the overlay while blackout is on, and is put back to a normal z order
+as soon as it ends. One that was already set to stay on top by its own settings is left that way.
 
 ## 🔄 Updates
 

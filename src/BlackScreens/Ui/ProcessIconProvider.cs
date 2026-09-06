@@ -27,7 +27,7 @@ internal static class ProcessIconProvider
     /// <summary>Remembers where a program lives when the user picks it with Browse.</summary>
     public static void Register(string processName, string executablePath)
     {
-        var name = ProcessDenylist.Normalize(processName);
+        var name = ProcessRules.Normalize(processName);
         if (name.Length == 0 || !File.Exists(executablePath))
         {
             return;
@@ -49,10 +49,31 @@ internal static class ProcessIconProvider
 
     public static ImageSource? For(string? processName)
     {
-        var name = ProcessDenylist.Normalize(processName);
+        var name = ProcessRules.Normalize(processName);
         if (name.Length == 0)
         {
             return Fallback();
+        }
+
+        // An entry that names one exact file has its icon right there, no searching needed.
+        if (ProcessRules.IsPath(name))
+        {
+            if (Cache.TryGetValue(name, out var byPath))
+            {
+                return byPath;
+            }
+
+            try
+            {
+                var fromPath = File.Exists(name) ? Load(name) : null;
+                Cache[name] = fromPath ?? Fallback();
+                return Cache[name];
+            }
+            catch (Exception ex)
+            {
+                ErrorLog.Write($"Icon load failed for {name}: {ex}");
+                return Fallback();
+            }
         }
 
         if (Cache.TryGetValue(name, out var cached))

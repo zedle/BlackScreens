@@ -61,7 +61,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        UIElement[] pages = [PageGeneral, PageDetection, PageBlackout, PageMonitors, PageDenylist, PageAbout];
+        UIElement[] pages = [PageGeneral, PageDetection, PageBlackout, PageMonitors, PageDenylist, PageOnTop, PageAbout];
         for (var i = 0; i < pages.Length; i++)
         {
             pages[i].Visibility = i == index ? Visibility.Visible : Visibility.Collapsed;
@@ -180,13 +180,61 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // The program may not be running, so remember where its icon lives.
+        // Browse picks one exact executable, so add it as a path. Typing a bare name is how you
+        // cover every copy of a program.
         ProcessIconProvider.Register(name, dialog.FileName);
-        _model.NewDenylistEntry = name;
+        _model.NewDenylistEntry = dialog.FileName;
         _model.AddDenylistEntry();
     }
 
     private void RemoveDenylistClick(object sender, RoutedEventArgs e) => _model.RemoveSelectedDenylistEntry();
+
+    private void AboveOverlayEntryKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        _model.AddAboveOverlayEntry();
+    }
+
+    private void AddAboveOverlayClick(object sender, RoutedEventArgs e)
+    {
+        _model.AddAboveOverlayEntry();
+        AboveOverlayEntryBox.Focus();
+    }
+
+    private void BrowseAboveOverlayClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Pick a program to keep above the overlay",
+            Filter = "Programs (*.exe)|*.exe|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        var name = Path.GetFileNameWithoutExtension(dialog.FileName);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        // Browse picks one exact executable, so add it as a path. Typing a bare name is how you
+        // cover every copy of a program.
+        ProcessIconProvider.Register(name, dialog.FileName);
+        _model.NewAboveOverlayEntry = dialog.FileName;
+        _model.AddAboveOverlayEntry();
+    }
+
+    private void RemoveAboveOverlayClick(object sender, RoutedEventArgs e) =>
+        _model.RemoveSelectedAboveOverlayEntry();
 
     private void RestoreDenylistClick(object sender, RoutedEventArgs e) => _model.RestoreDefaultDenylist();
 

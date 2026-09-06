@@ -10,10 +10,17 @@ public sealed class OverlayManager : IDisposable
     /// <summary>
     /// Shows a black overlay on each of <paramref name="blackMonitors"/> and removes the rest.
     /// A non null <paramref name="screensaverPath"/> draws that screensaver instead of plain black.
+    /// <paramref name="opacityPercent"/> is how solid the black is, and is ignored while a
+    /// screensaver is running, because a partly transparent window does not composite over the
+    /// native child window the screensaver draws into.
     /// </summary>
-    public void Apply(IReadOnlyList<Rectangle> blackMonitors, string? screensaverPath = null)
+    public void Apply(
+        IReadOnlyList<Rectangle> blackMonitors,
+        string? screensaverPath = null,
+        int opacityPercent = 100)
     {
         var desired = new HashSet<Rectangle>(blackMonitors);
+        var opacity = screensaverPath is null ? opacityPercent : 100;
 
         foreach (var leftover in _overlays.Keys.Where(key => !desired.Contains(key)).ToArray())
         {
@@ -33,6 +40,7 @@ public sealed class OverlayManager : IDisposable
 
                     // A game going fullscreen can push other topmost windows down the z order.
                     existing.Reassert();
+                    existing.SetOpacityPercent(opacity);
                     existing.SetScreensaver(screensaverPath);
                     continue;
                 }
@@ -40,6 +48,7 @@ public sealed class OverlayManager : IDisposable
                 var form = new OverlayForm(monitor);
                 form.Show();
                 form.PlaceAt(monitor);
+                form.SetOpacityPercent(opacity);
                 form.SetScreensaver(screensaverPath);
                 _overlays[monitor] = form;
             }

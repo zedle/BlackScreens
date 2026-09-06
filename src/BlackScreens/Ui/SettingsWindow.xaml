@@ -12,6 +12,8 @@
 
   <Window.Resources>
     <ui:ProcessIconConverter x:Key="ProcessIcon" />
+    <ui:ProcessLabelConverter x:Key="ProcessLabel" />
+    <ui:ProcessDetailConverter x:Key="ProcessDetail" />
   </Window.Resources>
 
   <Grid>
@@ -44,6 +46,7 @@
             <ListBoxItem Content="Blackout" Tag="{StaticResource IconBlackout}" />
             <ListBoxItem Content="Monitors" Tag="{StaticResource IconMonitors}" />
             <ListBoxItem Content="Denylist" Tag="{StaticResource IconDenylist}" />
+            <ListBoxItem Content="On top" Tag="{StaticResource IconOnTop}" />
             <ListBoxItem Content="About" Tag="{StaticResource IconAbout}" />
           </ListBox>
         </StackPanel>
@@ -186,6 +189,33 @@
               </StackPanel>
             </Border>
 
+            <Border Style="{StaticResource Card}" IsEnabled="{Binding BlackoutIsBlack}">
+              <StackPanel>
+                <TextBlock Text="Opacity" Style="{StaticResource FieldLabel}" />
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Slider Grid.Column="0"
+                          Minimum="20" Maximum="100"
+                          TickFrequency="5"
+                          IsSnapToTickEnabled="True"
+                          AutomationProperties.Name="Overlay opacity"
+                          Value="{Binding OverlayOpacity}" />
+                  <TextBlock Grid.Column="1"
+                             MinWidth="64"
+                             Margin="14,0,0,0"
+                             TextAlignment="Right"
+                             VerticalAlignment="Center"
+                             Text="{Binding OverlayOpacityText, Mode=OneWay}" />
+                </Grid>
+                <TextBlock Style="{StaticResource Hint}"
+                           Margin="0,8,0,0"
+                           Text="Fully opaque by default. Lower it to see through a covered monitor. This does not apply while a screensaver is running." />
+              </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource Card}" IsEnabled="{Binding BlackoutIsScreensaver}">
               <StackPanel>
                 <TextBlock Text="Screensaver" Style="{StaticResource FieldLabel}" />
@@ -297,7 +327,7 @@
           <StackPanel Grid.Row="0">
             <TextBlock Text="Denylist" Style="{StaticResource PageTitle}" />
             <TextBlock Style="{StaticResource PageSubtitle}"
-                       Text="These processes never count as the game. Process name only, no .exe needed." />
+                       Text="These processes never count as the game. Type a process name to cover every copy of a program, or Browse to pick one exact executable." />
           </StackPanel>
 
           <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -311,7 +341,7 @@
                      Text="{Binding NewDenylistEntry, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Process name to add"
                      KeyDown="DenylistEntryKeyDown"
-                     ToolTip="Type a process name, or use Browse to pick the program." />
+                     ToolTip="A process name covers every copy of that program. Browse adds one exact executable." />
             <Button Grid.Column="1"
                     Content="Browse..."
                     Margin="10,0,0,0"
@@ -329,13 +359,24 @@
                    AutomationProperties.Name="Denied processes">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" ToolTip="{Binding}">
                   <Image Width="18" Height="18"
                          Margin="0,0,10,0"
                          VerticalAlignment="Center"
                          RenderOptions.BitmapScalingMode="HighQuality"
                          Source="{Binding Converter={StaticResource ProcessIcon}}" />
-                  <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                  <!-- A path entry shows its file name and the folder it points at. A name entry
+                       says "any copy", so the two kinds are never mistaken for each other. The row
+                       tooltip carries the whole thing either way. -->
+                  <TextBlock Text="{Binding Converter={StaticResource ProcessLabel}}"
+                             VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Converter={StaticResource ProcessDetail}}"
+                             Style="{StaticResource Hint}"
+                             Margin="10,0,0,0"
+                             MaxWidth="380"
+                             TextTrimming="CharacterEllipsis"
+                             TextWrapping="NoWrap"
+                             VerticalAlignment="Center" />
                 </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
@@ -346,6 +387,84 @@
                     IsEnabled="{Binding CanRemoveDenylistEntry}"
                     Click="RemoveDenylistClick" />
             <Button Content="Restore defaults" Margin="10,0,0,0" Click="RestoreDenylistClick" />
+          </StackPanel>
+        </Grid>
+
+        <!-- On top -->
+        <Grid x:Name="PageOnTop" Margin="28,26,28,26" Visibility="Collapsed">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <StackPanel Grid.Row="0">
+            <TextBlock Text="On top" Style="{StaticResource PageTitle}" />
+            <TextBlock Style="{StaticResource PageSubtitle}"
+                       Text="These programs stay visible above a blacked out monitor. Type a process name to cover every copy, or Browse to pick one exact executable." />
+          </StackPanel>
+
+          <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0"
+                     x:Name="AboveOverlayEntryBox"
+                     Text="{Binding NewAboveOverlayEntry, UpdateSourceTrigger=PropertyChanged}"
+                     AutomationProperties.Name="Program to keep on top"
+                     KeyDown="AboveOverlayEntryKeyDown"
+                     ToolTip="A process name covers every copy of that program. Browse adds one exact executable." />
+            <Button Grid.Column="1"
+                    Content="Browse..."
+                    Margin="10,0,0,0"
+                    Click="BrowseAboveOverlayClick" />
+            <Button Grid.Column="2"
+                    Content="Add"
+                    Margin="10,0,0,0"
+                    IsEnabled="{Binding CanAddAboveOverlayEntry}"
+                    Click="AddAboveOverlayClick" />
+          </Grid>
+
+          <ListBox Grid.Row="2"
+                   ItemsSource="{Binding AboveOverlay}"
+                   SelectedItem="{Binding SelectedAboveOverlayEntry}"
+                   AutomationProperties.Name="Programs kept on top">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" ToolTip="{Binding}">
+                  <Image Width="18" Height="18"
+                         Margin="0,0,10,0"
+                         VerticalAlignment="Center"
+                         RenderOptions.BitmapScalingMode="HighQuality"
+                         Source="{Binding Converter={StaticResource ProcessIcon}}" />
+                  <!-- A path entry shows its file name and the folder it points at. A name entry
+                       says "any copy", so the two kinds are never mistaken for each other. The row
+                       tooltip carries the whole thing either way. -->
+                  <TextBlock Text="{Binding Converter={StaticResource ProcessLabel}}"
+                             VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Converter={StaticResource ProcessDetail}}"
+                             Style="{StaticResource Hint}"
+                             Margin="10,0,0,0"
+                             MaxWidth="380"
+                             TextTrimming="CharacterEllipsis"
+                             TextWrapping="NoWrap"
+                             VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,14,0,0">
+            <Button Content="Remove"
+                    IsEnabled="{Binding CanRemoveAboveOverlayEntry}"
+                    Click="RemoveAboveOverlayClick" />
+            <TextBlock Style="{StaticResource Hint}"
+                       VerticalAlignment="Center"
+                       Margin="14,0,0,0"
+                       Text="Empty by default. A program listed here is put back to normal once blackout ends." />
           </StackPanel>
         </Grid>
 

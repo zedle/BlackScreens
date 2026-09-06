@@ -25,10 +25,14 @@ on, the one with keyboard focus, and any monitor whitelisted in settings.
 
 - Solid black on the covered monitors, or a Windows screensaver run in preview mode inside the overlay
 - Per monitor whitelist, with an Identify button that flashes a number on every screen
+- Adjustable overlay opacity, so a covered monitor can be seen through rather than hidden. Opaque by default
+- Chosen programs can be kept above the overlay, for a capture preview or a chat window
 - Process denylist with program icons, so browsers, chat apps and the shell never count as a game
+- Denylist and on top entries are either a process name, covering every copy, or one exact executable path
 - Pause from the tray menu or a global hotkey, Ctrl + Alt + B by default
 - Settings window follows the Windows light or dark theme and accent color
 - Correct on mixed DPI desktops, portrait screens and hot plugged displays
+- Builds for x64 and Arm64
 
 ## Links
 

@@ -37,10 +37,13 @@ pwsh scripts/publish.ps1
   - `Detection/` decides what should go black. `GameDetector` and the types around it are pure logic
     over a snapshot of windows, with no Win32 calls and no UI, which is what makes them testable.
     Keep them that way. `WindowEnumerator` is the one part that touches Win32, and only to gather
-    the snapshot the rest works from.
+    the snapshot the rest works from. `ProcessRules` is the matcher behind both the denylist and the
+    on top list, where an entry is either a process name or one exact path.
   - `Monitors/` finds the screens. `MonitorHardware` reads the make and model out of each panel's
     EDID; the parsing is pure and tested, and only the lookup touches Win32 and the registry.
   - `Overlays/` puts the black windows on screens. `OverlayManager`, `OverlayForm` and `PlacedForm`.
+    `AlwaysOnTop` raises the programs that are meant to stay visible above them, and puts them back
+    afterwards.
   - `Configuration/` is the settings file, the blackout modes, the screensaver list and the startup
     registration.
   - `App/` is the tray app itself: the application context that owns the icon and the menu, single
@@ -74,7 +77,12 @@ pwsh scripts/publish.ps1
   why `PlacedForm` swallows `WM_DPICHANGED` and reapplies its own rectangle in raw pixels. Removing
   that turns a full screen overlay into a small square in the corner on mixed DPI desktops.
 - **Screensaver mode.** The screensaver runs as a child window inside the overlay, so the overlay
-  sets `WS_CLIPCHILDREN` and is deliberately not double buffered.
+  sets `WS_CLIPCHILDREN` and is deliberately not double buffered. Overlay opacity is forced back to
+  opaque while a screensaver is up: anything under 100 makes the overlay a layered window, which
+  does not composite over that native child.
+- **Programs kept on top.** `AlwaysOnTop` makes another program's window topmost, which is a change
+  to a window the app does not own. It records whether the window was already topmost and only puts
+  back the ones it actually changed, so a program that chose that for itself keeps it.
 - **Updates.** The app must not touch the network unless the user turned updates on. Anything that
   changes that has to change the readme and the website too, because both make the claim.
 - **The settings window.** The nav rail is a `ListBox` rather than a `TabControl`, because a

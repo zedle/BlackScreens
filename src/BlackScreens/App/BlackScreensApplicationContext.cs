@@ -7,6 +7,7 @@ namespace BlackScreens.App;
 internal sealed class BlackScreensApplicationContext : ApplicationContext
 {
     private readonly OverlayManager _overlays = new();
+    private readonly AlwaysOnTop _onTop = new();
     private readonly SingleInstance _instance;
     private readonly AppSettings _settings;
     private readonly NotifyIcon _icon;
@@ -161,6 +162,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             // Overlays are topmost, so they would sit on top of the settings window. Stand them down
             // while the window is open and pick the blackout back up on close.
             _overlays.HideAll();
+            _onTop.ReleaseAll();
 
             _monitors = MonitorEnumerator.CaptureAll();
             var window = new SettingsWindow(_settings, _monitors, _updates, SaveAndApplySettings);
@@ -307,12 +309,14 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             if (_rebuild)
             {
                 _overlays.HideAll();
+                _onTop.ReleaseAll();
                 _rebuild = false;
             }
 
             if (_paused || _settingsWindow is not null)
             {
                 _overlays.HideAll();
+                _onTop.ReleaseAll();
                 return;
             }
 
@@ -340,7 +344,17 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
                 .Where(monitor => _settings.IsWhitelisted(monitor.DeviceName))
                 .Select(monitor => monitor.Bounds)
                 .ToArray();
-            _overlays.Apply(result.BlackMonitors(monitors, whitelist), _screensaverPath);
+            var black = result.BlackMonitors(monitors, whitelist);
+            _overlays.Apply(black, _screensaverPath, _settings.GetOverlayOpacity());
+
+            if (black.Count > 0)
+            {
+                _onTop.Apply(_settings.GetAboveOverlay());
+            }
+            else
+            {
+                _onTop.ReleaseAll();
+            }
         }
         catch (Exception ex)
         {
@@ -395,6 +409,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
         if (_paused)
         {
             _overlays.HideAll();
+            _onTop.ReleaseAll();
         }
 
         UpdateTrayState();

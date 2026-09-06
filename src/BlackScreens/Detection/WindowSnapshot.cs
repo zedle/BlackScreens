@@ -10,4 +10,11 @@ public sealed record WindowSnapshot(
     bool Visible,
     bool Cloaked,
     bool IsForeground,
-    Rectangle MonitorBounds);
+    Rectangle MonitorBounds)
+{
+    /// <summary>
+    /// Full path to the executable, or empty when it could not be read. Only needed so a denylist or
+    /// on top entry can name one exact file rather than every program with the same name.
+    /// </summary>
+    public string ExecutablePath { get; init; } = string.Empty;
+}

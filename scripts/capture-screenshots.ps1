@@ -125,7 +125,7 @@ $window = Find-Window
 if (-not $window) { throw 'The settings window did not open.' }
 $handle = [IntPtr]$window.Current.NativeWindowHandle
 
-foreach ($page in @('General', 'Detection', 'Blackout', 'Monitors', 'Denylist', 'About')) {
+foreach ($page in @('General', 'Detection', 'Blackout', 'Monitors', 'Denylist', 'On top', 'About')) {
     $condition = New-Object System.Windows.Automation.PropertyCondition(
         [System.Windows.Automation.AutomationElement]::NameProperty, $page)
     $item = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
@@ -133,7 +133,8 @@ foreach ($page in @('General', 'Detection', 'Blackout', 'Monitors', 'Denylist', 
     Start-Sleep -Milliseconds 900
 
     $image = Get-WindowImage -Handle $handle
-    $path = Join-Path $out ($page.ToLower() + '.png')
+    $file = ($page -replace ' ', '').ToLower()
+    $path = Join-Path $out ($file + '.png')
     $image.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     '{0,-12} {1} x {2}' -f $page, $image.Width, $image.Height
     $image.Dispose()

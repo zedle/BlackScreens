@@ -151,6 +151,9 @@ public sealed class SettingsViewModel : ObservableObject
     private Screensaver _selectedScreensaver;
     private string _newDenylistEntry = string.Empty;
     private string? _selectedDenylistEntry;
+    private string _newAboveOverlayEntry = string.Empty;
+    private string? _selectedAboveOverlayEntry;
+    private int _overlayOpacity;
     private bool _isDirty;
 
     /// <summary>The picker entry that defers to the screensaver chosen in Windows.</summary>
@@ -193,11 +196,112 @@ public sealed class SettingsViewModel : ObservableObject
 
         Denylist = new ObservableCollection<string>(
             settings.GetDenylist().OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+
+        AboveOverlay = new ObservableCollection<string>(
+            settings.GetAboveOverlay().OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+
+        _overlayOpacity = settings.GetOverlayOpacity();
     }
 
     public ObservableCollection<MonitorChoice> Monitors { get; }
 
     public ObservableCollection<string> Denylist { get; }
+
+    /// <summary>Programs that stay visible above a blacked out monitor.</summary>
+    public ObservableCollection<string> AboveOverlay { get; }
+
+    /// <summary>How solid a blacked out monitor is. 100 is opaque.</summary>
+    public int OverlayOpacity
+    {
+        get => _overlayOpacity;
+        set
+        {
+            if (Track(ref _overlayOpacity, Math.Clamp(value, AppSettings.MinOverlayOpacity, 100)))
+            {
+                Raise(nameof(OverlayOpacityText));
+            }
+        }
+    }
+
+    public string OverlayOpacityText => _overlayOpacity >= 100
+        ? "Opaque"
+        : string.Create(CultureInfo.InvariantCulture, $"{_overlayOpacity}%");
+
+    public string NewAboveOverlayEntry
+    {
+        get => _newAboveOverlayEntry;
+        set
+        {
+            if (Set(ref _newAboveOverlayEntry, value))
+            {
+                Raise(nameof(CanAddAboveOverlayEntry));
+            }
+        }
+    }
+
+    public bool CanAddAboveOverlayEntry => ProcessRules.Normalize(_newAboveOverlayEntry).Length > 0;
+
+    public string? SelectedAboveOverlayEntry
+    {
+        get => _selectedAboveOverlayEntry;
+        set
+        {
+            if (Set(ref _selectedAboveOverlayEntry, value))
+            {
+                Raise(nameof(CanRemoveAboveOverlayEntry));
+            }
+        }
+    }
+
+    public bool CanRemoveAboveOverlayEntry => _selectedAboveOverlayEntry is not null;
+
+    /// <summary>Adds the typed program, keeping the list in order. False when there was nothing to add.</summary>
+    public bool AddAboveOverlayEntry()
+    {
+        var name = ProcessRules.Normalize(NewAboveOverlayEntry);
+        if (name.Length == 0)
+        {
+            return false;
+        }
+
+        if (AboveOverlay.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            NewAboveOverlayEntry = string.Empty;
+            SelectedAboveOverlayEntry = AboveOverlay.First(existing =>
+                string.Equals(existing, name, StringComparison.OrdinalIgnoreCase));
+            return false;
+        }
+
+        var index = 0;
+        while (index < AboveOverlay.Count
+            && string.Compare(AboveOverlay[index], name, StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            index++;
+        }
+
+        AboveOverlay.Insert(index, name);
+        NewAboveOverlayEntry = string.Empty;
+        SelectedAboveOverlayEntry = name;
+        IsDirty = true;
+        return true;
+    }
+
+    public bool RemoveSelectedAboveOverlayEntry()
+    {
+        if (_selectedAboveOverlayEntry is not { } selected)
+        {
+            return false;
+        }
+
+        var removed = AboveOverlay.Remove(selected);
+        if (removed)
+        {
+            SelectedAboveOverlayEntry = null;
+            IsDirty = true;
+        }
+
+        return removed;
+    }
 
     public ObservableCollection<Screensaver> ScreensaverOptions { get; }
 
@@ -381,7 +485,7 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    public bool CanAddDenylistEntry => ProcessDenylist.Normalize(_newDenylistEntry).Length > 0;
+    public bool CanAddDenylistEntry => ProcessRules.Normalize(_newDenylistEntry).Length > 0;
 
     public string? SelectedDenylistEntry
     {
@@ -414,7 +518,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     public bool AddDenylistEntry()
     {
-        var name = ProcessDenylist.Normalize(NewDenylistEntry);
+        var name = ProcessRules.Normalize(NewDenylistEntry);
         if (name.Length == 0)
         {
             return false;
@@ -487,6 +591,8 @@ public sealed class SettingsViewModel : ObservableObject
             .Select(monitor => monitor.DeviceName)
             .ToList();
         settings.DenylistProcessNames = Denylist.ToList();
+        settings.AboveOverlayProcessNames = AboveOverlay.ToList();
+        settings.OverlayOpacity = OverlayOpacity;
         settings.Blackout = BlackoutModes.Format(Blackout);
         settings.ScreensaverPath = ScreensaverPath;
     }

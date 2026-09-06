@@ -9,6 +9,13 @@ public sealed class AppSettings
     public const int MaxPollIntervalMs = 2000;
     public const int DefaultPollIntervalMs = 250;
 
+    /// <summary>
+    /// Below this the overlay stops doing its job, so the slider does not go there. 100 is opaque,
+    /// which is the default and what every build before 1.1 did.
+    /// </summary>
+    public const int MinOverlayOpacity = 20;
+    public const int DefaultOverlayOpacity = 100;
+
     public const int ModAlt = 0x0001;
     public const int ModControl = 0x0002;
     public const int ModShift = 0x0004;
@@ -27,6 +34,15 @@ public sealed class AppSettings
     public List<string> WhitelistedDeviceNames { get; set; } = [];
 
     public List<string> DenylistProcessNames { get; set; } = [];
+
+    /// <summary>
+    /// Programs kept above the overlay, so they stay visible on a blacked out monitor. Empty by
+    /// default. Process names, the same shape as the denylist.
+    /// </summary>
+    public List<string> AboveOverlayProcessNames { get; set; } = [];
+
+    /// <summary>How solid a blacked out monitor is, as a percentage. 100 is opaque.</summary>
+    public int OverlayOpacity { get; set; } = DefaultOverlayOpacity;
 
     public bool BackgroundGames { get; set; }
 
@@ -72,6 +88,10 @@ public sealed class AppSettings
         DenylistProcessNames.Count == 0 ? ProcessDenylist.Defaults : DenylistProcessNames;
 
     public bool GetAlwaysClearFocusedMonitor() => AlwaysClearFocusedMonitor ?? true;
+
+    public IReadOnlyList<string> GetAboveOverlay() => AboveOverlayProcessNames;
+
+    public int GetOverlayOpacity() => Math.Clamp(OverlayOpacity, MinOverlayOpacity, 100);
 
     public int GetPollIntervalMs() => Math.Clamp(PollIntervalMs, MinPollIntervalMs, MaxPollIntervalMs);
 
@@ -193,10 +213,18 @@ public sealed class AppSettings
             .ToList();
 
         DenylistProcessNames = DenylistProcessNames
-            .Select(ProcessDenylist.Normalize)
+            .Select(ProcessRules.Normalize)
             .Where(name => name.Length > 0)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        AboveOverlayProcessNames = AboveOverlayProcessNames
+            .Select(ProcessRules.Normalize)
+            .Where(name => name.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        OverlayOpacity = GetOverlayOpacity();
 
         if (string.IsNullOrWhiteSpace(Theme))
         {

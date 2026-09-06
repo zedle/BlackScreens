@@ -400,6 +400,7 @@
   <Geometry x:Key="IconBlackout">M13.2,10.6 A6.2,6.2 0 1 1 5.4,2.8 A5.2,5.2 0 0 0 13.2,10.6 Z</Geometry>
   <Geometry x:Key="IconMonitors">M1,3 H11 V10 H1 Z M4,13.4 H8 M6,10 V13.4 M13,5 H15.2 V11 H13</Geometry>
   <Geometry x:Key="IconDenylist">M8,1.6 A6.4,6.4 0 1 0 8.01,1.6 Z M3.5,3.5 L12.5,12.5</Geometry>
+  <Geometry x:Key="IconOnTop">M2.6,9.4 H10.4 V14.4 H2.6 Z M5.6,2 H13.4 V7 H5.6 Z</Geometry>
   <Geometry x:Key="IconAbout">M8,1.6 A6.4,6.4 0 1 0 8.01,1.6 Z M8,7.2 V11.6 M8,4.4 V5.4</Geometry>
 
 

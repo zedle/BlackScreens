@@ -9,7 +9,7 @@ public static class WindowEnumerator
         var foreground = NativeMethods.GetForegroundWindow();
         var self = Environment.ProcessId;
         var windows = new List<WindowSnapshot>();
-        var processNames = new Dictionary<int, string>();
+        var processPaths = new Dictionary<int, string>();
 
         NativeMethods.EnumWindows((hWnd, _) =>
         {
@@ -61,7 +61,10 @@ public static class WindowEnumerator
                     return true;
                 }
 
-                var processName = ResolveProcessName(processId, processNames);
+                var executablePath = ResolveProcessPath(processId, processPaths);
+                var processName = executablePath.Length == 0
+                    ? string.Empty
+                    : Path.GetFileNameWithoutExtension(executablePath);
                 if (processName.Length == 0)
                 {
                     return true;
@@ -75,7 +78,10 @@ public static class WindowEnumerator
                     Visible: true,
                     cloaked,
                     hWnd == foreground,
-                    monitorInfo.rcMonitor.ToRectangle()));
+                    monitorInfo.rcMonitor.ToRectangle())
+                {
+                    ExecutablePath = executablePath
+                });
             }
             catch
             {
@@ -91,15 +97,15 @@ public static class WindowEnumerator
     /// Resolves a process name once per scan. Cheaper than a <see cref="System.Diagnostics.Process"/>
     /// lookup for every window, which the 250 ms poll would otherwise repeat dozens of times a second.
     /// </summary>
-    private static string ResolveProcessName(int processId, Dictionary<int, string> cache)
+    private static string ResolveProcessPath(int processId, Dictionary<int, string> cache)
     {
         if (cache.TryGetValue(processId, out var cached))
         {
             return cached;
         }
 
-        var name = ProcessPath.NameForId(processId);
-        cache[processId] = name;
-        return name;
+        var path = ProcessPath.ForId(processId) ?? string.Empty;
+        cache[processId] = path;
+        return path;
     }
 }

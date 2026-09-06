@@ -20,6 +20,20 @@ internal sealed class OverlayForm : PlacedForm
     }
 
     /// <summary>
+    /// How solid the overlay is, as a percentage. Anything under 100 makes this a layered window,
+    /// which composites fine over the desktop but not over the native child window a screensaver
+    /// runs in, so the caller passes 100 whenever a screensaver is up.
+    /// </summary>
+    public void SetOpacityPercent(int percent)
+    {
+        var wanted = Math.Clamp(percent, AppSettings.MinOverlayOpacity, 100) / 100.0;
+        if (Math.Abs(Opacity - wanted) > 0.001)
+        {
+            Opacity = wanted;
+        }
+    }
+
+    /// <summary>
     /// Draws a screensaver instead of plain black. Pass null for black. The window must already be at
     /// its final size, because the screensaver reads the client rect when it starts. A screensaver
     /// that will not run in preview mode is dropped after a couple of tries and the monitor stays black.

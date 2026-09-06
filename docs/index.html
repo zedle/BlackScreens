@@ -64,13 +64,16 @@
     "https://blackscreens.app/assets/general.png",
     "https://blackscreens.app/assets/blackout.png",
     "https://blackscreens.app/assets/monitors.png",
-    "https://blackscreens.app/assets/denylist.png"
+    "https://blackscreens.app/assets/denylist.png",
+    "https://blackscreens.app/assets/ontop.png"
   ],
   "featureList": [
     "Blacks out unused monitors while a fullscreen or borderless game runs",
     "Keeps the game monitor and the focused monitor clear",
     "Per monitor whitelist for screens that must never go black",
     "Optional Windows screensaver on the covered monitors instead of solid black",
+    "Adjustable overlay opacity, so a covered monitor can be seen through",
+    "Chosen programs can stay visible above the overlay, for a capture or chat window",
     "Process denylist so browsers, chat apps and the shell never count as a game",
     "Global pause hotkey and a tray menu",
     "Optional update check against GitHub releases, off by default",
@@ -257,6 +260,26 @@
         </article>
 
         <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-layers"/></svg>
+          <h3>See through it if you want</h3>
+          <p>
+            Covered monitors are fully opaque by default. Slide the opacity down and they become a
+            dark wash instead, so you can still tell what is over there without it competing for your
+            eye mid game.
+          </p>
+        </article>
+
+        <article class="card">
+          <svg class="card-icon" aria-hidden="true"><use href="#i-shield"/></svg>
+          <h3>Keep one thing visible</h3>
+          <p>
+            Name a program on the On top page and its windows stay above the black, which is what you
+            want for a capture preview or a chat window. The rest of that monitor still goes dark
+            around it, and the program goes back to normal the moment blackout ends.
+          </p>
+        </article>
+
+        <article class="card">
           <svg class="card-icon" aria-hidden="true"><use href="#i-update"/></svg>
           <h3>Updates on your terms</h3>
           <p>
@@ -303,6 +326,10 @@
         <figure>
           <img src="assets/denylist.png" alt="The Denylist page listing processes with their program icons" width="1084" height="792" loading="lazy">
           <figcaption>Denylist: programs that never count as the game, with their real icons.</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/ontop.png" alt="The On top page listing programs that stay above the overlay, one by name and one by exact path" width="1084" height="792" loading="lazy">
+          <figcaption>On top: programs that stay visible above a blacked out monitor. Each row says whether it covers any copy or one exact executable.</figcaption>
         </figure>
       </div>
 

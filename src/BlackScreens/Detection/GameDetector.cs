@@ -21,7 +21,7 @@ public sealed class GameDetector
 
         foreach (var window in windows)
         {
-            if (window.IsForeground && (_denylist.Contains(window.ProcessName) || _options.AlwaysClearFocusedMonitor))
+            if (window.IsForeground && (_denylist.Contains(window.ProcessName, window.ExecutablePath) || _options.AlwaysClearFocusedMonitor))
             {
                 focusClear = window.MonitorBounds;
             }
@@ -31,7 +31,7 @@ public sealed class GameDetector
                 continue;
             }
 
-            if (_denylist.Contains(window.ProcessName))
+            if (_denylist.Contains(window.ProcessName, window.ExecutablePath))
             {
                 continue;
             }

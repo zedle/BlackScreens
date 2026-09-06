@@ -12,7 +12,7 @@ public sealed class ProcessDenylist
         "vlc", "mpc-hc64", "NVIDIA Share"
     ];
 
-    private readonly HashSet<string> _names;
+    private readonly ProcessRules _rules;
 
     public ProcessDenylist()
         : this(Defaults)
@@ -21,20 +21,16 @@ public sealed class ProcessDenylist
 
     public ProcessDenylist(IEnumerable<string> names)
     {
-        _names = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+        _rules = new ProcessRules(names);
     }
 
-    public bool Contains(string processName) => _names.Contains(processName);
+    /// <summary>
+    /// Whether this process is denied. An entry can be a bare name, matching every copy, or the full
+    /// path to one executable, so <paramref name="processPath"/> is worth passing when it is known.
+    /// </summary>
+    public bool Contains(string processName, string? processPath = null) =>
+        _rules.Matches(processName, processPath);
 
-    /// <summary>Trims a user typed entry down to a bare process name.</summary>
-    public static string Normalize(string? entry)
-    {
-        var name = entry?.Trim() ?? string.Empty;
-        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name[..^4].Trim();
-        }
-
-        return name;
-    }
+    /// <summary>Trims a user typed entry. Kept for callers that predate <see cref="ProcessRules"/>.</summary>
+    public static string Normalize(string? entry) => ProcessRules.Normalize(entry);
 }
