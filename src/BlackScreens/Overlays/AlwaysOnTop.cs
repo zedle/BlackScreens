@@ -13,9 +13,15 @@ namespace BlackScreens.Overlays;
 /// flickers as it is covered and uncovered. So both halves only act when the z order is actually
 /// wrong. In the steady state neither writes anything.
 ///
-/// A window that was already topmost before BlackScreens touched it is left that way afterwards.
-/// Everything else is put back when blackout ends, so no program is left holding a z order the user
-/// never asked it for.
+/// Every window raised is put back when blackout ends, and on the way out of the app, so nothing is
+/// left stuck in front of everything else.
+///
+/// It deliberately does not try to preserve a program's own always on top setting. It used to: it
+/// recorded whether a window was topmost the first time it saw it and left those alone afterwards.
+/// That latches. If the app dies while a window is raised, the window stays topmost, and the next
+/// run reads that leftover as the user's own setting and then refuses to lower it, forever. A
+/// program on this list has its topmost state owned by BlackScreens, which is simple, predictable,
+/// and repairs the leftover from any earlier crash the next time blackout ends.
 /// </remarks>
 public sealed class AlwaysOnTop
 {
@@ -23,10 +29,9 @@ public sealed class AlwaysOnTop
     private const nint HwndNoTopmost = -2;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
-    private const int WsExTopmost = 0x00000008;
 
-    /// <summary>Each window raised, against whether it was already topmost on its own.</summary>
-    private readonly Dictionary<nint, bool> _raised = [];
+    /// <summary>Every window this raised, so only those are put back.</summary>
+    private readonly HashSet<nint> _raised = [];
 
     /// <summary>How many windows are currently held above the overlays.</summary>
     public int Count => _raised.Count;
@@ -109,13 +114,7 @@ public sealed class AlwaysOnTop
         foreach (var handle in matches)
         {
             found.Add(handle);
-
-            // Remember how it was the first time, before anything is changed.
-            if (!_raised.ContainsKey(handle))
-            {
-                var exStyle = (int)NativeMethods.GetWindowLong(handle, NativeMethods.GwlExStyle);
-                _raised[handle] = (exStyle & WsExTopmost) != 0;
-            }
+            _raised.Add(handle);
 
             // Already in front of every overlay, so there is nothing to do and nothing to repaint.
             if (depth.TryGetValue(handle, out var at) && at < frontOverlay)
@@ -136,16 +135,16 @@ public sealed class AlwaysOnTop
         }
 
         // Anything raised before that has since closed, been hidden, or been taken off the list.
-        foreach (var gone in _raised.Keys.Where(handle => !found.Contains(handle)).ToArray())
+        foreach (var gone in _raised.Where(handle => !found.Contains(handle)).ToArray())
         {
             Restore(gone);
         }
     }
 
-    /// <summary>Puts every window this raised back to where it was.</summary>
+    /// <summary>Puts every window this raised back down. Safe to call when nothing is raised.</summary>
     public void ReleaseAll()
     {
-        foreach (var handle in _raised.Keys.ToArray())
+        foreach (var handle in _raised.ToArray())
         {
             Restore(handle);
         }
@@ -153,7 +152,7 @@ public sealed class AlwaysOnTop
 
     private void Restore(nint handle)
     {
-        if (!_raised.Remove(handle, out var wasAlreadyTopmost) || wasAlreadyTopmost)
+        if (!_raised.Remove(handle))
         {
             return;
         }

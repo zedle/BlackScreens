@@ -507,6 +507,8 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             }
         });
 
+        // Nothing may be left pinned in front of everything else once the app is gone.
+        Try(_onTop.ReleaseAll);
         Try(_overlays.Dispose);
 
         Try(() =>
