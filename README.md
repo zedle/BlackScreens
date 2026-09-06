@@ -110,10 +110,13 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-That is the whole process. `.github/workflows/release.yml` takes the version from the tag, stamps it
-into the binaries and the installer, runs the tests, publishes all three artifacts, signs them when
-SignPath is configured, and publishes the GitHub release. The website picks the new release up on its
-next page load.
+`.github/workflows/release.yml` takes the version from the tag, stamps it into the binaries and the
+installer, runs the tests, builds all three artifacts and signs them when SignPath is configured.
+
+It then leaves the release as a **draft** with the artifacts attached, so the notes can be read and
+edited before anyone sees them. Press Publish and it goes live complete with its downloads. A draft
+is invisible to the releases API, so the website and the updater in the app see nothing until then,
+and a tag pushed by mistake only produces another draft.
 
 Nothing in the repository stores the release version, so there is no file to bump. The `<Version>`
 in the project file is only the fallback for local builds.

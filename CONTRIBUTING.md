@@ -72,5 +72,6 @@ pwsh scripts/publish.ps1
 
 ## Releases
 
-Maintainers only: pushing a `v1.2.3` tag builds, versions and publishes everything. Nothing in the
-repository stores the version number.
+Maintainers only: pushing a `v1.2.3` tag builds and versions everything, then leaves a draft release
+with the artifacts attached. Read the notes, edit them, and press Publish. Nothing in the repository
+stores the version number.

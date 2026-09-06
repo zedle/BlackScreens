@@ -1,11 +1,20 @@
 name: Release
 
-# Releasing is one command:  git tag v1.2.3 && git push origin v1.2.3
+# Releasing is two steps:
+#
+#   1. git tag v1.2.3 && git push origin v1.2.3
+#   2. read the draft release it produces, edit the notes, press Publish
 #
 # The tag drives the version stamped into the binaries, the installer and the release name, so
-# nothing in the repository has to be edited to cut a release. The release is published, not left
-# as a draft, and the website reads it straight from the GitHub API, so the download links and the
-# release notes on the site update themselves.
+# nothing in the repository has to be edited to cut a release.
+#
+# The build always leaves a draft, with the artifacts already attached. That way the notes get read
+# before anyone sees them, and a tag pushed by mistake, or moved, only produces another draft
+# rather than changing what is published. Drafts are invisible to the releases API, so the website
+# and the updater in the app see nothing until the release is published, and when it is, it is
+# already complete with its downloads. Publishing has to be the last step for that reason: an
+# `on: release` trigger would have to build after publishing, leaving the release live and empty
+# for as long as the build takes.
 #
 # Signing is optional. When the SignPath secrets are present, the app exe is signed first, the
 # installer is built around that signed exe, and the installer is signed in turn. Without the
@@ -20,7 +29,7 @@ on:
         description: 'Version to build, for example 1.2.3'
         required: true
       draft:
-        description: 'Leave the release as a draft'
+        description: 'Leave the release as a draft. Tag pushes always do.'
         type: boolean
         default: true
 
@@ -175,7 +184,8 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.value }}
           name: BlackScreens ${{ steps.version.outputs.value }}
-          draft: ${{ inputs.draft == true }}
+          # A tag push is always a draft. A manual run can publish outright if it has to.
+          draft: ${{ github.event_name != 'workflow_dispatch' || inputs.draft }}
           generate_release_notes: true
           files: artifacts/*
           body: |
