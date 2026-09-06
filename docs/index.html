@@ -344,6 +344,24 @@
         </a>
       </div>
 
+      <section class="signing">
+        <h3>Signed downloads</h3>
+        <p>
+          Every release is Authenticode signed, so Windows can tell you who published it before you
+          run it. Free code signing provided by <a href="https://about.signpath.io/">SignPath.io</a>,
+          certificate by <a href="https://signpath.org/">SignPath Foundation</a>.
+        </p>
+        <p>
+          Greg Gage writes the code, reviews it before a release is tagged, and approves every
+          signing request. Releases are built and submitted for signing by the GitHub Actions
+          workflow in this repository, never from a developer machine.
+        </p>
+        <p>
+          BlackScreens keeps its settings and error log on your own machine and collects nothing.
+          The only request it can make is the optional update check described above.
+        </p>
+      </section>
+
       <section class="release-notes" data-release-notes hidden aria-live="polite">
         <h3>What changed in <span data-release-version></span></h3>
         <div class="release-body" data-release-body></div>
@@ -357,7 +375,10 @@
 
 <footer class="site-footer">
   <div class="wrap footer-inner">
-    <p>BlackScreens is free software under the MIT license.</p>
+    <p>
+      BlackScreens is free software under the MIT license. Code signing by
+      <a href="https://signpath.org/">SignPath Foundation</a>.
+    </p>
     <nav aria-label="Footer">
       <a data-repo href="#">Source</a>
       <a data-repo-href="/issues" href="#">Report an issue</a>

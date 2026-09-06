@@ -11,6 +11,7 @@
 - Platform: Windows 10 version 1809 or newer, 64 bit. Built on .NET 10 with WinForms overlays and a WPF settings window.
 - Install: a per user installer that needs no admin prompt, a single portable exe, or a small framework dependent zip.
 - Cost: free. Source is on GitHub under the MIT license.
+- Releases are Authenticode signed. Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 - Updates: optional. Off by default. When switched on it asks the GitHub releases API once a day, downloads the new build and installs it while no monitor is blacked out.
 
 ## How it decides what to cover

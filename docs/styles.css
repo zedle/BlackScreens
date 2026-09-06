@@ -461,6 +461,28 @@ kbd {
   font-size: 15px;
 }
 
+.signing {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+}
+
+.signing h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.signing p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 15.5px;
+}
+
+.signing p:last-child { margin-bottom: 0; }
+
 /* Footer */
 
 .site-footer {
