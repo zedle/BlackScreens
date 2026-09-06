@@ -174,14 +174,29 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             };
 
             _settingsWindow = window;
-            window.Show();
-            window.Activate();
+            ShowWpfWindow(window);
         }
         catch (Exception ex)
         {
             ErrorLog.Write($"Opening settings failed: {ex}");
             Notify("Settings could not be opened. See the error log.");
         }
+    }
+
+    /// <summary>
+    /// Shows a WPF window from this WinForms application context.
+    /// </summary>
+    /// <remarks>
+    /// The message loop here is WinForms', and it does not know how to hand a keystroke to a
+    /// modeless WPF window: the window paints, and the mouse works, but nothing typed ever arrives.
+    /// EnableModelessKeyboardInterop adds the message filter that forwards keyboard messages to the
+    /// window's HwndSource, which is what makes text boxes, tab order and access keys work at all.
+    /// </remarks>
+    private static void ShowWpfWindow(System.Windows.Window window)
+    {
+        System.Windows.Forms.Integration.ElementHost.EnableModelessKeyboardInterop(window);
+        window.Show();
+        window.Activate();
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) => Post(() =>
@@ -225,8 +240,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
                 _settings.Save();
             };
 
-            window.Show();
-            window.Activate();
+            ShowWpfWindow(window);
         }
         catch (Exception ex)
         {

@@ -87,6 +87,10 @@ pwsh scripts/publish.ps1
   changes that has to change the readme and the website too, because both make the claim.
 - **The settings window.** The nav rail is a `ListBox` rather than a `TabControl`, because a
   retemplated `TabControl` stops exposing its selected page to accessibility tools.
+- **Showing a WPF window.** Always through `ShowWpfWindow`, never `window.Show()` directly. The
+  message loop is WinForms', and it does not know how to hand a keystroke to a modeless WPF window,
+  so without `ElementHost.EnableModelessKeyboardInterop` the window paints and the mouse works but
+  nothing typed ever arrives. It fails silently and only in the places that take text.
 
 ## Releases
 
