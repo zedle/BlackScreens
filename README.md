@@ -114,6 +114,11 @@ See `AGENTS.MD` for the layout and conventions,
 [`docs/index.html`](docs/index.html) for the project website. The site works out of a plain `docs/`
 folder with no build step, and its links resolve to whichever repository serves it.
 
+## Credits
+
+Built with a lot of help from Claude. I decided what it should do and whether the result was any
+good, the robot did most of the typing.
+
 ## License
 
 MIT, see [`LICENSE`](LICENSE).
