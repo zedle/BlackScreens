@@ -26,7 +26,15 @@ internal class PlacedForm : Form
         ShowInTaskbar = false;
         ShowIcon = false;
         StartPosition = FormStartPosition.Manual;
-        TopMost = true;
+
+        // Deliberately not TopMost. WinForms applies that property with a SetWindowPos that passes
+        // neither SWP_NOACTIVATE nor SWP_NOOWNERZORDER, so the overlay is activated the moment its
+        // handle is created, and the game loses the foreground. WS_EX_NOACTIVATE does not help: it
+        // stops a click activating the window, not an explicit activation like that one.
+        //
+        // OverlayPlacement.Place puts the window at HWND_TOPMOST with SWP_NOACTIVATE instead, and
+        // the poll reasserts it, so the overlay still sits above everything without ever taking
+        // focus. It is called immediately after Show for that reason.
     }
 
     /// <summary>The rectangle this window is meant to cover, in physical screen pixels.</summary>

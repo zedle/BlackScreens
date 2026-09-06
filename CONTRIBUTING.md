@@ -76,6 +76,11 @@ pwsh scripts/publish.ps1
 - **Overlays.** WinForms rescales a window when it moves to a monitor with a different DPI, which is
   why `PlacedForm` swallows `WM_DPICHANGED` and reapplies its own rectangle in raw pixels. Removing
   that turns a full screen overlay into a small square in the corner on mixed DPI desktops.
+- **Never set `TopMost` on an overlay.** WinForms applies that property with a `SetWindowPos` that
+  passes no `SWP_NOACTIVATE`, so the overlay is activated as its handle is created and the game
+  loses the foreground. `WS_EX_NOACTIVATE` does not save you: it stops a click activating a window,
+  not an explicit activation. `OverlayPlacement.Place` sets `HWND_TOPMOST` with `SWP_NOACTIVATE`
+  instead, and the poll reasserts it.
 - **Screensaver mode.** The screensaver runs as a child window inside the overlay, so the overlay
   sets `WS_CLIPCHILDREN` and is deliberately not double buffered. Overlay opacity is forced back to
   opaque while a screensaver is up: anything under 100 makes the overlay a layered window, which
