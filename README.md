@@ -4,7 +4,7 @@ Windows tray app that blacks out the monitors you are not using while a fullscre
 borderless game is running. The game keeps its monitor, the monitor you are working on stays
 clear, and everything else goes dark so nothing pulls your eye mid fight.
 
-**🌐 [zedle.github.io/BlackScreens](https://zedle.github.io/BlackScreens/)** for screenshots and downloads.
+**🌐 [blackscreens.app](https://blackscreens.app)** for screenshots and downloads.
 
 - 🎯 Detects fullscreen and borderless windows, ignores the browser, chat app and shell processes
   on the denylist
@@ -124,9 +124,10 @@ To preview the site against a real repository before it is published, serve `doc
 See `AGENTS.MD` for the layout and conventions, and
 [`docs/CODE-SIGNING.md`](docs/CODE-SIGNING.md) for how releases get signed.
 
-The website is the [`docs/`](docs/) folder, served by GitHub Pages from `main` / `/docs`. It is
-plain HTML with no build step, and it reads the latest release from the GitHub API, so the version,
-download links, file sizes and release notes follow whatever was published last.
+The website is the [`docs/`](docs/) folder, served by GitHub Pages from `main` / `/docs` at
+[blackscreens.app](https://blackscreens.app). It is plain HTML with no build step, and it reads the
+latest release from the GitHub API, so the version, download links, file sizes and release notes
+follow whatever was published last.
 
 ## 🤝 Contributing
 
