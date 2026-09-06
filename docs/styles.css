@@ -330,6 +330,44 @@ kbd {
   margin-top: 2px;
 }
 
+/* Which processor the download cards point at. */
+
+.arch-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.arch {
+  padding: 7px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.arch:hover { border-color: var(--accent); }
+
+.arch[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.arch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.arch-note {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
 /* Sections */
 
 .section { padding: 76px 0; }

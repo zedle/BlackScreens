@@ -3,20 +3,26 @@
   Builds the BlackScreens release artifacts.
 
 .DESCRIPTION
-  Produces these under artifacts\:
+  Produces these under artifacts\, for whichever runtime is asked for:
     BlackScreens-<version>-win-x64.exe          self contained single file, no runtime install needed
     BlackScreens-<version>-win-x64-runtime.zip  small download, needs the .NET Desktop Runtime
     BlackScreens-<version>-setup.exe            NSIS installer, only when makensis is on the machine
+
+  Run it once per architecture to build a whole release. The Arm64 installer is named
+  "-setup-arm64.exe" rather than "-arm64-setup.exe" so that 1.0.0 and 1.0.1, which match the
+  installer by its ending and take the first asset that fits, cannot offer it to an x64 machine.
 
   The release pipeline skips the installer here and builds it after the app exe has been signed, so
   the installer ships a signed payload.
 
 .EXAMPLE
   pwsh scripts\publish.ps1
+  pwsh scripts\publish.ps1 -Runtime win-arm64
 #>
 [CmdletBinding()]
 param(
     [string]$Configuration = 'Release',
+    [ValidateSet('win-x64', 'win-arm64')]
     [string]$Runtime = 'win-x64',
     [string]$Version,
     [switch]$NoInstaller
@@ -88,7 +94,7 @@ Compress-Archive -Path (Join-Path $frameworkDependent '*') -DestinationPath $zip
 
 if (-not $NoInstaller) {
     try {
-        & (Join-Path $PSScriptRoot 'build-installer.ps1') -SourceExe $exeOut -Version $version
+        & (Join-Path $PSScriptRoot 'build-installer.ps1') -SourceExe $exeOut -Version $version -Runtime $Runtime
     }
     catch {
         Write-Warning "Installer skipped: $($_.Exception.Message)"
@@ -101,4 +107,4 @@ Get-ChildItem $artifacts -File | ForEach-Object {
     '{0,-52} {1,8:N1} MB' -f $_.Name, ($_.Length / 1MB)
 }
 Write-Host ''
-Write-Host 'Unsigned. See docs\CODE-SIGNING.md before handing these to anyone else.'
+Write-Host 'Unsigned. The release workflow is what signs a build for distribution.'

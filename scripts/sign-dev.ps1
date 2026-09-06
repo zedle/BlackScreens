@@ -5,7 +5,7 @@
 .DESCRIPTION
   For testing the signing path only. A self signed certificate is NOT trusted on anyone else's
   machine and does not remove the SmartScreen prompt. Real releases are signed by SignPath.
-  See docs\CODE-SIGNING.md.
+  For a real signature, the release workflow signs through SignPath.
 
 .EXAMPLE
   pwsh scripts\sign-dev.ps1 -Path artifacts\BlackScreens-1.0.0-win-x64.exe

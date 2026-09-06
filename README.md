@@ -25,6 +25,13 @@ Download the latest release:
 | `BlackScreens-<version>-win-x64.exe` | The same app as one portable file. Nothing to install |
 | `BlackScreens-<version>-win-x64-runtime.zip` | Much smaller, needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 
+On an Arm based PC, a Snapdragon X machine or a Surface Pro for instance, take the Arm64 builds
+instead. They are the same three files with `arm64` in place of `x64`, and `-setup-arm64.exe` for the
+installer. [blackscreens.app](https://blackscreens.app) works out which one you want and offers it.
+
+The x64 build runs on an Arm machine through emulation, so it is a safe fallback, but the Arm64 one
+is faster and easier on the battery.
+
 Either way BlackScreens ends up in the tray. Turn on **Start with Windows** on the General page if
 you want it back after a reboot. The installer leaves your settings behind when you uninstall unless
 you say otherwise.
@@ -100,8 +107,9 @@ Release artifacts:
 pwsh scripts/publish.ps1
 ```
 
-That runs the tests, publishes both flavours, and builds the NSIS installer when `makensis` is
-available. Requires the .NET 10 SDK, plus [NSIS](https://nsis.sourceforge.io) for the installer.
+That runs the tests, publishes both flavours for x64, and builds the NSIS installer when `makensis`
+is available. Add `-Runtime win-arm64` for the Arm64 build; a release is the script run once per
+architecture. Requires the .NET 10 SDK, plus [NSIS](https://nsis.sourceforge.io) for the installer.
 
 ## 🚀 Cutting a release
 
@@ -111,7 +119,8 @@ git push origin v1.2.3
 ```
 
 `.github/workflows/release.yml` takes the version from the tag, stamps it into the binaries and the
-installer, runs the tests, builds all three artifacts and signs them when SignPath is configured.
+installer, runs the tests, builds all six artifacts, x64 and Arm64, and signs them when SignPath
+is configured.
 
 It then leaves the release as a **draft** with the artifacts attached, so the notes can be read and
 edited before anyone sees them. Press Publish and it goes live complete with its downloads. A draft
@@ -124,8 +133,8 @@ in the project file is only the fallback for local builds.
 To preview the site against a real repository before it is published, serve `docs/` and add
 `?repo=owner/name` to the URL.
 
-See `AGENTS.MD` for the layout and conventions, and
-[`docs/CODE-SIGNING.md`](docs/CODE-SIGNING.md) for how releases get signed.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) has the layout and the conventions. Signing is handled by the
+release workflow, and happens when the SignPath secrets are configured.
 
 The website is the [`docs/`](docs/) folder, served by GitHub Pages from `main` / `/docs` at
 [blackscreens.app](https://blackscreens.app). It is plain HTML with no build step, and it reads the

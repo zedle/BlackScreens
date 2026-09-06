@@ -18,7 +18,7 @@ name: Release
 #
 # Signing is optional. When the SignPath secrets are present, the app exe is signed first, the
 # installer is built around that signed exe, and the installer is signed in turn. Without the
-# secrets the release still happens, labelled as unsigned. See docs/CODE-SIGNING.md.
+# secrets the release still happens, labelled as unsigned.
 
 on:
   push:
@@ -59,9 +59,13 @@ jobs:
           "value=$version" >> $env:GITHUB_OUTPUT
           Write-Host "Building BlackScreens $version"
 
+      # Once per architecture. The artifacts land side by side under artifacts\ with names that
+      # say which is which, and the installers are built later, after signing.
       - name: Build and publish
         shell: pwsh
-        run: ./scripts/publish.ps1 -Version '${{ steps.version.outputs.value }}' -NoInstaller
+        run: |
+          ./scripts/publish.ps1 -Version '${{ steps.version.outputs.value }}' -Runtime win-x64 -NoInstaller
+          ./scripts/publish.ps1 -Version '${{ steps.version.outputs.value }}' -Runtime win-arm64 -NoInstaller
 
       - name: Check for SignPath configuration
         id: signing
@@ -122,11 +126,13 @@ jobs:
           }
           $nsis >> $env:GITHUB_PATH
 
-      - name: Build the installer
+      - name: Build the installers
         shell: pwsh
         run: |
-          $exe = "artifacts/BlackScreens-${{ steps.version.outputs.value }}-win-x64.exe"
-          ./scripts/build-installer.ps1 -SourceExe $exe -Version '${{ steps.version.outputs.value }}'
+          foreach ($runtime in 'win-x64', 'win-arm64') {
+            $exe = "artifacts/BlackScreens-${{ steps.version.outputs.value }}-$runtime.exe"
+            ./scripts/build-installer.ps1 -SourceExe $exe -Version '${{ steps.version.outputs.value }}' -Runtime $runtime
+          }
 
       - name: Upload unsigned installer
         id: unsigned-installer
@@ -134,7 +140,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: blackscreens-installer-unsigned
-          path: artifacts/*-setup.exe
+          path: artifacts/*setup*.exe
           if-no-files-found: error
 
       - name: Sign the installer
@@ -149,31 +155,60 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: signed-installer
 
-      - name: Take the signed installer
+      - name: Take the signed installers
         if: steps.signing.outputs.configured == 'true'
         shell: pwsh
         run: |
           Get-ChildItem signed-installer -File -Recurse | Copy-Item -Destination artifacts -Force
-          $setup = Get-ChildItem artifacts -Filter *-setup.exe | Select-Object -First 1
-          $status = (Get-AuthenticodeSignature $setup.FullName).Status
-          "$($setup.Name): $status"
-          if ($status -ne 'Valid') { throw 'The installer is not validly signed.' }
+          $setups = Get-ChildItem artifacts -Filter *setup*.exe
+          if ($setups.Count -ne 2) { throw "Expected two installers, found $($setups.Count)." }
+          foreach ($setup in $setups) {
+            $status = (Get-AuthenticodeSignature $setup.FullName).Status
+            "$($setup.Name): $status"
+            if ($status -ne 'Valid') { throw "$($setup.Name) is not validly signed." }
+          }
 
       # --- checks before anything is published -----------------------------
 
       - name: Smoke test the published app
         shell: pwsh
         run: |
-          $exe = "artifacts/BlackScreens-${{ steps.version.outputs.value }}-win-x64.exe"
-          $reported = (Get-Item $exe).VersionInfo.ProductVersion -replace '\+.*$', ''
-          "exe reports version $reported"
-          if ($reported -ne '${{ steps.version.outputs.value }}') {
-            throw "The exe reports $reported but the tag says ${{ steps.version.outputs.value }}."
+          $version = '${{ steps.version.outputs.value }}'
+
+          # An Arm64 binary cannot be run on this x64 runner, but its version resource reads fine,
+          # and so does the machine type in its PE header, which is what proves it really is Arm64
+          # rather than an x64 build under another name.
+          $expected = @{ 'win-x64' = 0x8664; 'win-arm64' = 0xAA64 }
+          foreach ($runtime in 'win-x64', 'win-arm64') {
+            $exe = "artifacts/BlackScreens-$version-$runtime.exe"
+            $reported = (Get-Item $exe).VersionInfo.ProductVersion -replace '\+.*$', ''
+            if ($reported -ne $version) {
+              throw "$exe reports $reported but the tag says $version."
+            }
+
+            $stream = [System.IO.File]::OpenRead((Resolve-Path $exe))
+            try {
+              $reader = New-Object System.IO.BinaryReader $stream
+              $stream.Position = 0x3C
+              $stream.Position = $reader.ReadInt32()
+              [void]$reader.ReadUInt32()
+              $machine = $reader.ReadUInt16()
+            }
+            finally { $stream.Dispose() }
+
+            "$runtime reports version $reported, machine 0x{0:X}" -f $machine
+            if ($machine -ne $expected[$runtime]) {
+              throw ("{0} has machine 0x{1:X}, expected 0x{2:X}." -f $exe, $machine, $expected[$runtime])
+            }
           }
+
           foreach ($name in @(
-            "BlackScreens-${{ steps.version.outputs.value }}-win-x64.exe",
-            "BlackScreens-${{ steps.version.outputs.value }}-win-x64-runtime.zip",
-            "BlackScreens-${{ steps.version.outputs.value }}-setup.exe")) {
+            "BlackScreens-$version-win-x64.exe",
+            "BlackScreens-$version-win-x64-runtime.zip",
+            "BlackScreens-$version-setup.exe",
+            "BlackScreens-$version-win-arm64.exe",
+            "BlackScreens-$version-win-arm64-runtime.zip",
+            "BlackScreens-$version-setup-arm64.exe")) {
             if (-not (Test-Path "artifacts/$name")) { throw "Missing artifact $name" }
           }
 
@@ -189,6 +224,9 @@ jobs:
           generate_release_notes: true
           files: artifacts/*
           body: |
+            Builds are provided for x64 and for Arm64. Take the Arm64 ones on a Snapdragon or other
+            Arm based PC, and the x64 ones everywhere else.
+
             `BlackScreens-*-setup.exe` installs to your user profile with no admin prompt.
             `BlackScreens-*-win-x64.exe` is the same app as a single portable file.
             `BlackScreens-*-runtime.zip` is a much smaller download that needs the .NET 10 Desktop Runtime.

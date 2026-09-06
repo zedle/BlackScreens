@@ -13,7 +13,9 @@
 [CmdletBinding()]
 param(
     [string]$SourceExe,
-    [string]$Version
+    [string]$Version,
+    [ValidateSet('win-x64', 'win-arm64')]
+    [string]$Runtime = 'win-x64'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,7 +32,7 @@ if (-not $Version) {
 if (-not $Version) { throw 'Could not determine the version.' }
 
 if (-not $SourceExe) {
-    $SourceExe = Join-Path $artifacts "BlackScreens-$Version-win-x64.exe"
+    $SourceExe = Join-Path $artifacts "BlackScreens-$Version-$Runtime.exe"
 }
 if (-not (Test-Path $SourceExe)) {
     throw "Published exe not found: $SourceExe. Run scripts\publish.ps1 first."
@@ -49,7 +51,17 @@ if (-not $makensis) {
 }
 
 New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
-$outFile = Join-Path $artifacts "BlackScreens-$Version-setup.exe"
+
+# The x64 installer keeps the plain name it has always had. 1.0.0 and 1.0.1 look for an asset ending
+# "-setup.exe" and take the first that matches, so the Arm64 one has to end some other way or those
+# releases would offer it to x64 machines. See UpdateTarget.AssetSuffix.
+if ($Runtime -eq 'win-x64') {
+    $outFile = Join-Path $artifacts "BlackScreens-$Version-setup.exe"
+}
+else {
+    $architecture = $Runtime -replace '^win-', ''
+    $outFile = Join-Path $artifacts "BlackScreens-$Version-setup-$architecture.exe"
+}
 
 Write-Host "Building installer $outFile"
 & $makensis `

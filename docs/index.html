@@ -13,7 +13,7 @@
      with the previous stylesheet, which is what happened when the lightbox first shipped. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Plain text summary for language models">
 
@@ -44,7 +44,7 @@
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "Multi monitor utility",
   "operatingSystem": "Windows 10, Windows 11",
-  "processorRequirements": "x64",
+  "processorRequirements": "x64, ARM64",
   "softwareRequirements": "Windows 10 version 1809 or newer",
   "isAccessibleForFree": true,
   "license": "https://opensource.org/licenses/MIT",
@@ -339,7 +339,13 @@
   <section class="section alt" id="download">
     <div class="wrap narrow">
       <h2>Download</h2>
-      <p class="section-lede"><i class="bi bi-windows lede-icon" aria-hidden="true"></i>Windows 10 version 1809 or newer, 64 bit.</p>
+      <p class="section-lede"><i class="bi bi-windows lede-icon" aria-hidden="true"></i>Windows 10 version 1809 or newer. Builds for x64 and Arm64.</p>
+
+      <div class="arch-choice" role="group" aria-label="Processor type">
+        <button type="button" class="arch" data-arch="x64" aria-pressed="true">x64</button>
+        <button type="button" class="arch" data-arch="arm64" aria-pressed="false">Arm64</button>
+        <span class="arch-note" data-arch-note></span>
+      </div>
 
       <div class="downloads">
         <a class="download" data-asset="setup" data-repo-href="/releases/latest" href="#">
@@ -405,6 +411,82 @@
     }
 
     var slug = repoSlug();
+
+    // Which build the download cards point at. Chromium tells us the processor if asked; nothing
+    // else does, so x64 is the assumption and the picker is there for when it is wrong.
+    var architecture = 'x64';
+    var latest = null;
+
+    // The cached copy is only there to keep repeat views off the API, which allows 60 calls an hour
+    // to an address that is not signed in. It has to go stale, or a tab opened before a release
+    // keeps showing the old version for as long as it stays open, which is what happened when 1.0.1
+    // shipped. This has to be declared above the call to fetchLatest below: as a var underneath it,
+    // it hoisted as undefined and every freshness check against it was false, which quietly turned
+    // the cache off altogether.
+    var cacheLifetimeMs = 10 * 60 * 1000;
+
+    var assetPatterns = {
+      x64: {
+        setup: /-setup\.exe$/i,
+        portable: /-win-x64\.exe$/i,
+        runtime: /-win-x64-runtime\.zip$/i
+      },
+      arm64: {
+        setup: /-setup-arm64\.exe$/i,
+        portable: /-win-arm64\.exe$/i,
+        runtime: /-win-arm64-runtime\.zip$/i
+      }
+    };
+
+    function applyAssets(arch) {
+      var patterns = assetPatterns[arch] || assetPatterns.x64;
+      var assets = (latest && latest.assets) || [];
+      var missing = false;
+
+      document.querySelectorAll('[data-asset]').forEach(function (card) {
+        var pattern = patterns[card.getAttribute('data-asset')];
+        var asset = assets.filter(function (a) { return pattern.test(a.name); })[0];
+        var size = card.querySelector('[data-asset-size]');
+
+        if (!asset) {
+          // An older release with no build for this architecture. Leave the card pointing at the
+          // releases page rather than at the wrong file.
+          missing = true;
+          if (size) size.textContent = '';
+          return;
+        }
+
+        card.href = asset.url;
+        if (size) size.textContent = megabytes(asset.size);
+      });
+
+      var note = document.querySelector('[data-arch-note]');
+      if (note) {
+        note.textContent = missing && arch === 'arm64'
+          ? 'This release has no Arm64 build yet.'
+          : '';
+      }
+    }
+
+    function chooseArchitecture(arch) {
+      architecture = arch;
+      document.querySelectorAll('[data-arch]').forEach(function (button) {
+        button.setAttribute('aria-pressed', String(button.getAttribute('data-arch') === arch));
+      });
+      applyAssets(arch);
+    }
+
+    document.querySelectorAll('[data-arch]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        chooseArchitecture(button.getAttribute('data-arch'));
+      });
+    });
+
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      navigator.userAgentData.getHighEntropyValues(['architecture']).then(function (info) {
+        if (info && info.architecture === 'arm') chooseArchitecture('arm64');
+      }).catch(function () { /* stays on x64 */ });
+    }
     var base = 'https://github.com/' + slug;
 
     document.querySelectorAll('[data-repo]').forEach(function (a) { a.href = base; });
@@ -415,12 +497,6 @@
     if (!window.fetch) return;
 
     fetchLatest(slug).then(render).catch(function () { /* keep the static fallback */ });
-
-    // The cached copy is only there to keep repeat views off the API, which allows 60 calls an hour
-    // to an address that is not signed in. It has to go stale, or a tab opened before a release
-    // keeps showing the old version for as long as it stays open, which is exactly what happened
-    // when 1.0.1 shipped.
-    var cacheLifetimeMs = 10 * 60 * 1000;
 
     function fetchLatest(repo) {
       var key = 'bs-release:' + repo;
@@ -467,20 +543,9 @@
         line.hidden = false;
       }
 
-      var patterns = {
-        setup: /-setup\.exe$/i,
-        portable: /win-x64\.exe$/i,
-        runtime: /\.zip$/i
-      };
-
-      document.querySelectorAll('[data-asset]').forEach(function (card) {
-        var pattern = patterns[card.getAttribute('data-asset')];
-        var asset = (release.assets || []).filter(function (a) { return pattern.test(a.name); })[0];
-        if (!asset) return;
-        card.href = asset.url;
-        var size = card.querySelector('[data-asset-size]');
-        if (size) size.textContent = megabytes(asset.size);
-      });
+      // Held on to so the picker can re-point the cards without asking the API again.
+      latest = release;
+      applyAssets(architecture);
 
       var notes = document.querySelector('[data-release-notes]');
       var body = document.querySelector('[data-release-body]');

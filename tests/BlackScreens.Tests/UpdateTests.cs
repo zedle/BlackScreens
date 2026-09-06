@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using BlackScreens.Updates;
 using Xunit;
 
@@ -46,31 +47,60 @@ public sealed class ReleaseVersionTests
 
 public sealed class UpdateTargetTests
 {
+    /// <summary>A release the way one is published: a build of each kind for each architecture.</summary>
     private static readonly string[] Assets =
     [
         "BlackScreens-1.1.0-setup.exe",
         "BlackScreens-1.1.0-win-x64.exe",
-        "BlackScreens-1.1.0-win-x64-runtime.zip"
+        "BlackScreens-1.1.0-win-x64-runtime.zip",
+        "BlackScreens-1.1.0-setup-arm64.exe",
+        "BlackScreens-1.1.0-win-arm64.exe",
+        "BlackScreens-1.1.0-win-arm64-runtime.zip"
     ];
 
-    [Fact]
-    public void An_installed_copy_takes_the_installer()
+    [Theory]
+    [InlineData(Architecture.X64, InstallKind.Installed, "BlackScreens-1.1.0-setup.exe")]
+    [InlineData(Architecture.X64, InstallKind.Portable, "BlackScreens-1.1.0-win-x64.exe")]
+    [InlineData(Architecture.Arm64, InstallKind.Installed, "BlackScreens-1.1.0-setup-arm64.exe")]
+    [InlineData(Architecture.Arm64, InstallKind.Portable, "BlackScreens-1.1.0-win-arm64.exe")]
+    public void Each_architecture_takes_its_own_build(
+        Architecture architecture, InstallKind kind, string expected)
     {
-        Assert.Equal("BlackScreens-1.1.0-setup.exe", UpdateTarget.PickAsset(InstallKind.Installed, Assets));
+        // Never the runtime zip either way: that build cannot start without the .NET runtime.
+        Assert.Equal(expected, UpdateTarget.PickAsset(kind, Assets, architecture));
     }
 
+    /// <summary>
+    /// 1.0.0 and 1.0.1 match the installer by the "-setup.exe" ending and take the first asset that
+    /// fits, so an Arm64 installer named "-arm64-setup.exe" could have been handed to an x64
+    /// machine. This is the check that the name never drifts back to that.
+    /// </summary>
     [Fact]
-    public void A_portable_copy_takes_the_self_contained_exe()
+    public void The_arm64_names_cannot_be_mistaken_for_the_x64_ones_by_an_older_build()
     {
-        // Never the runtime zip: that build cannot start without the .NET runtime installed.
-        Assert.Equal("BlackScreens-1.1.0-win-x64.exe", UpdateTarget.PickAsset(InstallKind.Portable, Assets));
+        foreach (var name in Assets.Where(name => name.Contains("arm64", StringComparison.Ordinal)))
+        {
+            Assert.False(name.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase), name);
+            Assert.False(name.EndsWith("-win-x64.exe", StringComparison.OrdinalIgnoreCase), name);
+        }
     }
 
     [Fact]
     public void A_release_without_a_usable_asset_is_skipped()
     {
-        Assert.Null(UpdateTarget.PickAsset(InstallKind.Installed, ["notes.txt"]));
-        Assert.Null(UpdateTarget.PickAsset(InstallKind.Portable, []));
+        Assert.Null(UpdateTarget.PickAsset(InstallKind.Installed, ["notes.txt"], Architecture.X64));
+        Assert.Null(UpdateTarget.PickAsset(InstallKind.Portable, [], Architecture.X64));
+
+        // A release with only x64 builds has nothing for an Arm64 machine, which is not an update.
+        Assert.Null(UpdateTarget.PickAsset(
+            InstallKind.Portable, ["BlackScreens-1.1.0-win-x64.exe"], Architecture.Arm64));
+    }
+
+    [Fact]
+    public void An_architecture_with_no_build_asks_for_nothing()
+    {
+        Assert.Null(UpdateTarget.AssetSuffix(InstallKind.Installed, Architecture.X86));
+        Assert.Null(UpdateTarget.PickAsset(InstallKind.Portable, Assets, Architecture.Arm));
     }
 
     [Fact]
