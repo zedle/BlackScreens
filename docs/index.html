@@ -8,7 +8,10 @@
 <link rel="canonical" href="https://blackscreens.app/">
 <meta name="theme-color" content="#12141a">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
-<link rel="stylesheet" href="styles.css">
+<!-- The version has to change whenever styles.css does. The page and the stylesheet are
+     cached separately for ten minutes each, so without it a browser can pair new markup
+     with the previous stylesheet, which is what happened when the lightbox first shipped. -->
+<link rel="stylesheet" href="styles.css?v=2">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Plain text summary for language models">
 
@@ -578,7 +581,7 @@
   })();
 </script>
 
-<dialog class="lightbox" data-lightbox aria-label="Screenshot">
+<dialog class="lightbox" data-lightbox tabindex="-1" aria-label="Screenshot">
   <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&#215;</button>
   <img data-lightbox-image alt="">
   <p class="lightbox-caption" data-lightbox-caption></p>
@@ -614,6 +617,11 @@
         caption.textContent = text ? text.textContent : '';
 
         dialog.showModal();
+
+        // Without this the browser puts focus on the close button and paints its own focus ring
+        // over the corner of the picture. Focusing the dialog keeps Escape and tabbing working
+        // with nothing drawn on top of the shot.
+        dialog.focus();
       });
     });
 

@@ -1,6 +1,10 @@
 /* BlackScreens site. Palette matches the app's dark and light themes. */
 
 :root {
+  /* Dark first, light supported. Without this the browser draws its own furniture, the
+     scrollbars and the inside of a <dialog>, in light colours over a dark page. */
+  color-scheme: dark light;
+
   --bg: #12141a;
   --bg-alt: #0d0f14;
   --surface: #1a1d25;
@@ -430,6 +434,9 @@ kbd {
 
 .lightbox::backdrop { background: rgba(5, 7, 11, 0.82); }
 
+/* The dialog takes focus when it opens, so it must not draw a ring of its own. */
+.lightbox:focus { outline: none; }
+
 .lightbox img {
   display: block;
   width: auto;
@@ -467,6 +474,11 @@ kbd {
 }
 
 .lightbox-close:hover { border-color: var(--accent); }
+
+.lightbox-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* On a narrow screen the corner button would sit off the edge. */
 @media (max-width: 640px) {
