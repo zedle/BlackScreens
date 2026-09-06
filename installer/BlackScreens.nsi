@@ -99,11 +99,22 @@ Section "Install"
   IntFmt $0 "0x%08X" $0
   WriteRegDWORD HKCU "${UNINSTKEY}" "EstimatedSize" "$0"
 
-  ; The in app updater runs this silently and wants the app back afterwards.
+  ; Start the app once it is in place. An ordinary install does that from the checkbox on the finish
+  ; page, so this only has to cover a silent one, which has no finish page to click.
+  ;
+  ; The in app updater runs the installer with /S /RESTART, and that case needs --updated: it makes
+  ; the new process wait for the outgoing one to let go of the single instance mutex rather than
+  ; seeing it and quitting.
+  IfSilent 0 Started
   ${GetParameters} $R0
   ${GetOptions} $R0 "/RESTART" $R1
-  IfErrors +2 0
+  IfErrors FreshInstall Restarting
+FreshInstall:
+  Exec '"$INSTDIR\BlackScreens.exe"'
+  Goto Started
+Restarting:
   Exec '"$INSTDIR\BlackScreens.exe" --updated'
+Started:
 SectionEnd
 
 Section "Uninstall"
