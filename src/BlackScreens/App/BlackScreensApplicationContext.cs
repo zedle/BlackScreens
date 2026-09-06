@@ -8,6 +8,7 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
 {
     private readonly OverlayManager _overlays = new();
     private readonly AlwaysOnTop _onTop = new();
+    private nint _lastForeground;
     private readonly SingleInstance _instance;
     private readonly AppSettings _settings;
     private readonly NotifyIcon _icon;
@@ -359,11 +360,19 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
                 .Select(monitor => monitor.Bounds)
                 .ToArray();
             var black = result.BlackMonitors(monitors, whitelist);
-            _overlays.Apply(black, _screensaverPath, _settings.GetOverlayOpacity());
+
+            // Only push the overlays back to the front when something could have pushed them down.
+            // A game taking over the screen changes the foreground, and doing it on every poll makes
+            // any window held above them flicker, because it is covered and uncovered each time.
+            var foreground = NativeMethods.GetForegroundWindow();
+            var foregroundMoved = foreground != _lastForeground;
+            _lastForeground = foreground;
+
+            _overlays.Apply(black, _screensaverPath, _settings.GetOverlayOpacity(), foregroundMoved);
 
             if (black.Count > 0)
             {
-                _onTop.Apply(_settings.GetAboveOverlay());
+                _onTop.Apply(_settings.GetAboveOverlay(), _overlays.Handles);
             }
             else
             {

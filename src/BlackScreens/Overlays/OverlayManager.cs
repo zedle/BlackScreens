@@ -7,6 +7,10 @@ public sealed class OverlayManager : IDisposable
     /// <summary>Number of overlays currently shown. Exposed for diagnostics and tests.</summary>
     public int Count => _overlays.Count;
 
+    /// <summary>The window handles of the overlays on screen, for whoever has to sit above them.</summary>
+    public IReadOnlyCollection<nint> Handles =>
+        _overlays.Values.Where(form => form.IsHandleCreated).Select(form => form.Handle).ToArray();
+
     /// <summary>
     /// Shows a black overlay on each of <paramref name="blackMonitors"/> and removes the rest.
     /// A non null <paramref name="screensaverPath"/> draws that screensaver instead of plain black.
@@ -14,10 +18,17 @@ public sealed class OverlayManager : IDisposable
     /// screensaver is running, because a partly transparent window does not composite over the
     /// native child window the screensaver draws into.
     /// </summary>
+    /// <param name="reassertZOrder">
+    /// Whether to push the overlays back to the top. Doing it on every poll is what made a window
+    /// held above them flicker: the overlay went above it and was put back below it four times a
+    /// second, and each of those is a repaint. The caller only asks for it when something happened
+    /// that could have pushed the overlays down, which in practice means the foreground changed.
+    /// </param>
     public void Apply(
         IReadOnlyList<Rectangle> blackMonitors,
         string? screensaverPath = null,
-        int opacityPercent = 100)
+        int opacityPercent = 100,
+        bool reassertZOrder = true)
     {
         var desired = new HashSet<Rectangle>(blackMonitors);
         var opacity = screensaverPath is null ? opacityPercent : 100;
@@ -39,7 +50,11 @@ public sealed class OverlayManager : IDisposable
                     }
 
                     // A game going fullscreen can push other topmost windows down the z order.
-                    existing.Reassert();
+                    if (reassertZOrder)
+                    {
+                        existing.Reassert();
+                    }
+
                     existing.SetOpacityPercent(opacity);
                     existing.SetScreensaver(screensaverPath);
                     continue;

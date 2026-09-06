@@ -88,6 +88,11 @@ pwsh scripts/publish.ps1
 - **Programs kept on top.** `AlwaysOnTop` makes another program's window topmost, which is a change
   to a window the app does not own. It records whether the window was already topmost and only puts
   back the ones it actually changed, so a program that chose that for itself keeps it.
+- **Never write the z order on a timer.** Both the overlay reassert and the raise in `AlwaysOnTop`
+  used to run every poll, so the overlay went above the kept window and the kept window went back
+  above the overlay four times a second, and it visibly flickered as it was covered and uncovered.
+  Both now act only when the z order is actually wrong: the overlays are pushed back only when the
+  foreground has moved, and a kept window is raised only when it is behind an overlay.
 - **Updates.** The app must not touch the network unless the user turned updates on. Anything that
   changes that has to change the readme and the website too, because both make the claim.
 - **The settings window.** The nav rail is a `ListBox` rather than a `TabControl`, because a
