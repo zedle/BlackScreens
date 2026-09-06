@@ -219,7 +219,9 @@ kbd {
 }
 
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   padding: 12px 22px;
   border-radius: 8px;
   border: 1px solid var(--line-strong);
@@ -281,6 +283,29 @@ kbd {
 /* Icons. One hidden sprite at the top of the page, referenced with <use>. */
 
 .sprite { display: none; }
+
+/* The two brand marks come from Bootstrap Icons, loaded in the head. They inherit colour and sit
+   on the text baseline, so they follow the theme without any rules per icon. */
+.bi {
+  line-height: 1;
+  flex: none;
+}
+
+.button .bi { font-size: 1.05em; }
+
+/* On a link the icon is inline rather than a flex child, so it needs its own spacing. */
+.repo-link .bi,
+.release-all .bi,
+.site-footer .bi {
+  margin-right: 7px;
+  font-size: 0.95em;
+  vertical-align: -1px;
+}
+
+.lede-icon {
+  margin-right: 9px;
+  vertical-align: -1px;
+}
 
 .card-icon,
 .download-icon {

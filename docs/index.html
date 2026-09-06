@@ -11,7 +11,9 @@
 <!-- The version has to change whenever styles.css does. The page and the stylesheet are
      cached separately for ten minutes each, so without it a browser can pair new markup
      with the previous stylesheet, which is what happened when the lightbox first shipped. -->
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="styles.css?v=6">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Plain text summary for language models">
 
@@ -130,7 +132,7 @@
       <a href="#screens">Screenshots</a>
       <a href="#how">How it works</a>
       <a href="#download">Download</a>
-      <a class="repo-link" data-repo href="#">GitHub</a>
+      <a class="repo-link" data-repo href="#"><i class="bi bi-github" aria-hidden="true"></i>GitHub</a>
     </nav>
   </div>
 </header>
@@ -149,8 +151,10 @@
           goes dark until you alt tab back out.
         </p>
         <div class="cta">
-          <a class="button primary" data-repo-href="/releases/latest" href="#download">Download for Windows</a>
-          <a class="button" data-repo href="#">View source</a>
+          <a class="button primary" data-repo-href="/releases/latest" href="#download">
+            <i class="bi bi-windows" aria-hidden="true"></i>Download for Windows</a>
+          <a class="button" data-repo href="#">
+            <i class="bi bi-github" aria-hidden="true"></i>View source</a>
         </div>
         <p class="release-line" data-release-line hidden></p>
         <p class="fineprint">Free and open source, MIT licensed. No account and no telemetry.</p>
@@ -335,7 +339,7 @@
   <section class="section alt" id="download">
     <div class="wrap narrow">
       <h2>Download</h2>
-      <p class="section-lede">Windows 10 version 1809 or newer, 64 bit.</p>
+      <p class="section-lede"><i class="bi bi-windows lede-icon" aria-hidden="true"></i>Windows 10 version 1809 or newer, 64 bit.</p>
 
       <div class="downloads">
         <a class="download" data-asset="setup" data-repo-href="/releases/latest" href="#">
@@ -358,7 +362,7 @@
       <section class="release-notes" data-release-notes hidden aria-live="polite">
         <h3>What changed in <span data-release-version></span></h3>
         <div class="release-body" data-release-body></div>
-        <a class="release-all" data-repo-href="/releases" href="#">Every release</a>
+        <a class="release-all" data-repo-href="/releases" href="#"><i class="bi bi-github" aria-hidden="true"></i>Every release</a>
       </section>
 
     </div>
@@ -370,9 +374,9 @@
   <div class="wrap footer-inner">
     <p>BlackScreens is free software under the MIT license.</p>
     <nav aria-label="Footer">
-      <a data-repo href="#">Source</a>
-      <a data-repo-href="/issues" href="#">Report an issue</a>
-      <a data-repo-href="/releases" href="#">All releases</a>
+      <a data-repo href="#"><i class="bi bi-github" aria-hidden="true"></i>Source</a>
+      <a data-repo-href="/issues" href="#"><i class="bi bi-github" aria-hidden="true"></i>Report an issue</a>
+      <a data-repo-href="/releases" href="#"><i class="bi bi-github" aria-hidden="true"></i>All releases</a>
     </nav>
   </div>
 </footer>
