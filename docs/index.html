@@ -578,5 +578,62 @@
   })();
 </script>
 
+<dialog class="lightbox" data-lightbox aria-label="Screenshot">
+  <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&#215;</button>
+  <img data-lightbox-image alt="">
+  <p class="lightbox-caption" data-lightbox-caption></p>
+</dialog>
+
+<script>
+  // Click a screenshot to see it full size. The button around each image is added here rather than
+  // written into the markup, so with scripting off the shots stay ordinary images instead of
+  // controls that do nothing. <dialog> brings the backdrop, the Escape key and the focus trap with
+  // it, which is most of the work.
+  (function () {
+    var dialog = document.querySelector('[data-lightbox]');
+    if (!dialog || typeof dialog.showModal !== 'function') return;
+
+    var image = dialog.querySelector('[data-lightbox-image]');
+    var caption = dialog.querySelector('[data-lightbox-caption]');
+
+    document.querySelectorAll('.shots img, .tray-shot img').forEach(function (shot) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'zoom';
+      button.setAttribute('aria-label', 'Enlarge: ' + (shot.alt || 'screenshot'));
+
+      shot.parentNode.insertBefore(button, shot);
+      button.appendChild(shot);
+
+      button.addEventListener('click', function () {
+        image.src = shot.currentSrc || shot.src;
+        image.alt = shot.alt;
+
+        var figure = button.closest('figure');
+        var text = figure && figure.querySelector('figcaption');
+        caption.textContent = text ? text.textContent : '';
+
+        dialog.showModal();
+      });
+    });
+
+    // A click that lands on the dialog itself, rather than on the image or the caption inside it,
+    // is a click on the area around them, which is the usual way out of a lightbox.
+    dialog.addEventListener('click', function (event) {
+      if (event.target === dialog) dialog.close();
+    });
+
+    dialog.querySelector('[data-lightbox-close]').addEventListener('click', function () {
+      dialog.close();
+    });
+
+    // Drop the image so a reopened lightbox never shows the previous shot for a frame.
+    dialog.addEventListener('close', function () {
+      image.removeAttribute('src');
+      caption.textContent = '';
+    });
+  })();
+</script>
+
 </body>
 </html>
