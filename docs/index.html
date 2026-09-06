@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlackScreens - black out the monitors you are not gaming on</title>
+<meta name="description" content="A tiny Windows tray app that blacks out your other monitors while a fullscreen or borderless game is running. Open source, no telemetry.">
+<meta name="theme-color" content="#12141a">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="styles.css">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="BlackScreens">
+<meta property="og:description" content="Blacks out the monitors you are not gaming on. Windows tray app, open source, no telemetry.">
+<meta property="og:image" content="assets/general.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 24 16" aria-hidden="true">
+        <rect x="0.75" y="1.75" width="8" height="10" rx="1.2"/>
+        <rect x="10.25" y="0.75" width="12.5" height="12" rx="1.2"/>
+        <path d="M4.75 11.75v2.5M2.5 14.25h4.5M16.5 12.75v2.5M14 15.25h5"/>
+      </svg>
+      <span>BlackScreens</span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#screens">Screenshots</a>
+      <a href="#how">How it works</a>
+      <a href="#download">Download</a>
+      <a class="repo-link" data-repo href="#">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero" id="top">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Windows tray app</p>
+        <h1>Black out the monitors you are not gaming on.</h1>
+        <p class="lede">
+          A game goes fullscreen and your other screens keep glowing at you: a browser, a chat window,
+          a dashboard, all pulling your eye at the worst moment. BlackScreens covers them. The game
+          keeps its monitor, whatever you are actually working in stays visible, and everything else
+          goes dark until you alt tab back out.
+        </p>
+        <div class="cta">
+          <a class="button primary" data-repo-href="/releases/latest" href="#download">Download for Windows</a>
+          <a class="button" data-repo href="#">View source</a>
+        </div>
+        <p class="release-line" data-release-line hidden></p>
+        <p class="fineprint">Free and open source, MIT licensed. No account, no telemetry, no network access.</p>
+      </div>
+
+      <figure class="hero-figure" aria-labelledby="hero-figure-caption">
+        <svg viewBox="0 0 420 200" role="img" aria-label="Three monitors: the side screens are black, the middle one is running a game">
+          <defs>
+            <linearGradient id="game" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4c8dff"/>
+              <stop offset="55%" stop-color="#8b5cf6"/>
+              <stop offset="100%" stop-color="#ec4899"/>
+            </linearGradient>
+          </defs>
+
+          <g class="screen off">
+            <rect x="8" y="42" width="112" height="70" rx="4"/>
+            <path d="M64 112v14M48 126h32"/>
+          </g>
+
+          <g class="screen on">
+            <rect x="130" y="24" width="160" height="100" rx="5"/>
+            <rect class="fill" x="134" y="28" width="152" height="92" rx="3" fill="url(#game)"/>
+            <path d="M210 124v16M188 140h44"/>
+          </g>
+
+          <g class="screen off">
+            <rect x="300" y="42" width="112" height="70" rx="4"/>
+            <path d="M356 112v14M340 126h32"/>
+          </g>
+
+          <g class="labels">
+            <text x="64" y="163">black</text>
+            <text x="210" y="163">game</text>
+            <text x="356" y="163">black</text>
+          </g>
+        </svg>
+        <figcaption id="hero-figure-caption">The game monitor and the monitor with keyboard focus are never covered.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="wrap">
+      <h2>What it does</h2>
+      <div class="grid">
+
+        <article class="card">
+          <h3>Knows a game when it sees one</h3>
+          <p>
+            Detects fullscreen and borderless windows by their real window style and geometry, not by
+            a list of game names. Browsers, chat apps and the Windows shell sit on a denylist so they
+            never trigger a blackout.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Never covers the wrong screen</h3>
+          <p>
+            The game's monitor stays clear, the monitor holding keyboard focus stays clear, and any
+            monitor you whitelist stays clear. Monitor rectangles are matched against the real display
+            list first, so a near miss can never black out everything.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Black, or a screensaver</h3>
+          <p>
+            Covered monitors go solid black by default. Prefer some motion? Point BlackScreens at any
+            installed Windows screensaver and it runs there instead, on the covered screens only.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Out of the way</h3>
+          <p>
+            Lives in the tray. Pause with <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> or from the
+            menu, where Pause is a check mark rather than a button that renames itself. Polls a few
+            times a second and does nothing at all when no game is running.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Mixed DPI and odd layouts</h3>
+          <p>
+            Overlays are positioned in raw screen pixels, so a 4K monitor at 150 percent next to a
+            1080p at 100 percent still gets covered edge to edge. Portrait screens, negative
+            coordinates and hot plugged displays are all handled.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Yours to inspect</h3>
+          <p>
+            MIT licensed, no installer bundles, no analytics, no network calls of any kind. Settings
+            are a readable JSON file under <code>%LocalAppData%\BlackScreens</code>.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="screens">
+    <div class="wrap">
+      <h2>Screenshots</h2>
+      <p class="section-lede">
+        The settings window follows your Windows theme, dark or light, and picks up your accent color.
+      </p>
+
+      <div class="shots">
+        <figure>
+          <img src="assets/general.png" alt="The General page of BlackScreens settings, showing start with Windows, theme, pause hotkey and detection interval" width="1100" height="800" loading="lazy">
+          <figcaption>General: startup, theme, hotkey, how often detection runs.</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/blackout.png" alt="The Blackout page, choosing between solid black and a Windows screensaver" width="1100" height="800" loading="lazy">
+          <figcaption>Blackout: solid black, or a screensaver on the covered monitors.</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/monitors.png" alt="The Monitors page listing each connected display with a checkbox to keep it clear" width="1100" height="800" loading="lazy">
+          <figcaption>Monitors: tick the screens that must never go black. Identify flashes a number on each one.</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/denylist.png" alt="The Denylist page listing processes with their program icons" width="1100" height="800" loading="lazy">
+          <figcaption>Denylist: programs that never count as the game, with their real icons.</figcaption>
+        </figure>
+      </div>
+
+      <figure class="tray-shot">
+        <img src="assets/tray.png" alt="The BlackScreens tray menu with a checkable Pause item showing the Ctrl Alt B shortcut" width="210" height="126" loading="lazy">
+        <figcaption>The tray menu, themed to match.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="wrap narrow">
+      <h2>How it works</h2>
+      <p>
+        A few times a second BlackScreens looks at the visible top level windows. A window counts as a
+        game when it is not cloaked, has no title bar or is a popup, fills its monitor to within two
+        pixels, and its process is not on the denylist. By default only the window in the foreground
+        can start a blackout, so a game you alt tabbed away from leaves your desktop alone.
+      </p>
+      <p>
+        Everything else is a plain black, click blocking window placed exactly over each monitor that
+        should be covered. When the game closes or you press the pause hotkey, those windows go away.
+        There is no driver, no hook, and nothing that touches the game process.
+      </p>
+      <ul class="checklist">
+        <li>Always clear: the game's monitor</li>
+        <li>Always clear: the monitor with keyboard focus</li>
+        <li>Always clear: anything you ticked on the Monitors page</li>
+        <li>Blackout pauses on its own while the settings window is open</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section alt" id="download">
+    <div class="wrap narrow">
+      <h2>Download</h2>
+      <p class="section-lede">Windows 10 version 1809 or newer, 64 bit.</p>
+
+      <div class="downloads">
+        <a class="download" data-asset="setup" data-repo-href="/releases/latest" href="#">
+          <span class="download-name">Installer<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">Installs into your user profile, so there is no admin prompt. Uninstalls cleanly from Add or remove programs.</span>
+        </a>
+        <a class="download" data-asset="portable" data-repo-href="/releases/latest" href="#">
+          <span class="download-name">Portable<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">One file, nothing to install, nothing else to download.</span>
+        </a>
+        <a class="download" data-asset="runtime" data-repo-href="/releases/latest" href="#">
+          <span class="download-name">Framework dependent<span class="asset-size" data-asset-size></span></span>
+          <span class="download-detail">A much smaller zip that needs the .NET 10 Desktop Runtime already installed.</span>
+        </a>
+      </div>
+
+      <section class="release-notes" data-release-notes hidden aria-live="polite">
+        <h3>What changed in <span data-release-version></span></h3>
+        <div class="release-body" data-release-body></div>
+        <a class="release-all" data-repo-href="/releases" href="#">Every release</a>
+      </section>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>BlackScreens is free software under the MIT license.</p>
+    <nav aria-label="Footer">
+      <a data-repo href="#">Source</a>
+      <a data-repo-href="/issues" href="#">Report an issue</a>
+      <a data-repo-href="/releases" href="#">All releases</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  // Everything below is progressive enhancement. With no JavaScript, or if the GitHub API is
+  // unreachable, the page still links to the repository and to /releases/latest, which always
+  // resolves to the newest published release.
+  (function () {
+    // Used when the page is served from somewhere other than GitHub Pages.
+    var FALLBACK = 'https://github.com/zedle/BlackScreens';
+
+    function repoSlug() {
+      // ?repo=owner/name previews the live release data from a local copy of this page.
+      var override = new URLSearchParams(location.search).get('repo');
+      if (override && /^[\w.-]+\/[\w.-]+$/.test(override)) return override;
+
+      var host = location.hostname.match(/^([^.]+)\.github\.io$/);
+      if (!host) return null;
+      var project = location.pathname.split('/').filter(Boolean)[0];
+      return host[1] + '/' + (project || 'BlackScreens');
+    }
+
+    var slug = repoSlug();
+    var base = slug ? 'https://github.com/' + slug : FALLBACK;
+
+    document.querySelectorAll('[data-repo]').forEach(function (a) { a.href = base; });
+    document.querySelectorAll('[data-repo-href]').forEach(function (a) {
+      a.href = base + a.getAttribute('data-repo-href');
+    });
+
+    if (!slug || !window.fetch) return;
+
+    fetchLatest(slug).then(render).catch(function () { /* keep the static fallback */ });
+
+    function fetchLatest(repo) {
+      var key = 'bs-release:' + repo;
+      var cached = null;
+      try { cached = sessionStorage.getItem(key); } catch (e) { /* private mode */ }
+      if (cached) return Promise.resolve(JSON.parse(cached));
+
+      return fetch('https://api.github.com/repos/' + repo + '/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' }
+      }).then(function (response) {
+        if (!response.ok) throw new Error('no release');
+        return response.json();
+      }).then(function (release) {
+        var trimmed = {
+          tag: release.tag_name,
+          published: release.published_at,
+          body: release.body || '',
+          assets: (release.assets || []).map(function (a) {
+            return { name: a.name, size: a.size, url: a.browser_download_url };
+          })
+        };
+        try { sessionStorage.setItem(key, JSON.stringify(trimmed)); } catch (e) { /* ignore */ }
+        return trimmed;
+      });
+    }
+
+    function render(release) {
+      var version = String(release.tag || '').replace(/^v/, '');
+
+      var line = document.querySelector('[data-release-line]');
+      if (line && version) {
+        line.textContent = 'Latest release: ' + version + dateSuffix(release.published);
+        line.hidden = false;
+      }
+
+      var patterns = {
+        setup: /-setup\.exe$/i,
+        portable: /win-x64\.exe$/i,
+        runtime: /\.zip$/i
+      };
+
+      document.querySelectorAll('[data-asset]').forEach(function (card) {
+        var pattern = patterns[card.getAttribute('data-asset')];
+        var asset = (release.assets || []).filter(function (a) { return pattern.test(a.name); })[0];
+        if (!asset) return;
+        card.href = asset.url;
+        var size = card.querySelector('[data-asset-size]');
+        if (size) size.textContent = megabytes(asset.size);
+      });
+
+      var notes = document.querySelector('[data-release-notes]');
+      var body = document.querySelector('[data-release-body]');
+      if (notes && body && release.body) {
+        var label = notes.querySelector('[data-release-version]');
+        if (label) label.textContent = version;
+        body.innerHTML = markdown(shorten(release.body));
+        notes.hidden = false;
+      }
+    }
+
+    // Release notes can run to hundreds of lines. Show the opening of them and let the link do
+    // the rest, so the page keeps its shape whatever ends up in a release.
+    function shorten(text) {
+      var lines = text.split(/\r?\n/);
+      var kept = [];
+      var budget = 1600;
+
+      for (var i = 0; i < lines.length && kept.length < 26; i++) {
+        budget -= lines[i].length + 1;
+        if (budget < 0) break;
+        kept.push(lines[i]);
+      }
+
+      if (kept.length < lines.length) kept.push('', 'Read the rest on the release page.');
+      return kept.join('\n');
+    }
+
+    function dateSuffix(iso) {
+      if (!iso) return '';
+      var when = new Date(iso);
+      if (isNaN(when)) return '';
+      return ', ' + when.toLocaleDateString(undefined, {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+
+    function megabytes(bytes) {
+      if (!bytes) return '';
+      var mb = bytes / (1024 * 1024);
+      return mb < 1
+        ? ' ' + Math.round(bytes / 1024) + ' KB'
+        : ' ' + (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB';
+    }
+
+    // A deliberately small subset of Markdown. The text is escaped first, so anything not handled
+    // here ends up as plain text rather than markup.
+    function markdown(text) {
+      var lines = escapeHtml(text).split(/\r?\n/);
+      var html = '';
+      var inList = false;
+
+      lines.forEach(function (raw) {
+        var line = raw.trim();
+
+        // Blank lines close a list. Markdown table rules are noise once tables are not rendered.
+        if (!line || /^\|[\s:|-]+\|$/.test(line)) {
+          if (inList) { html += '</ul>'; inList = false; }
+          return;
+        }
+
+        var heading = line.match(/^#{1,6}\s+(.*)$/);
+        if (heading) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h4>' + inline(heading[1]) + '</h4>';
+          return;
+        }
+
+        var item = line.match(/^[*-]\s+(.*)$/);
+        if (item) {
+          if (!inList) { html += '<ul>'; inList = true; }
+          html += '<li>' + inline(item[1]) + '</li>';
+          return;
+        }
+
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<p>' + inline(line) + '</p>';
+      });
+
+      if (inList) html += '</ul>';
+      return html;
+    }
+
+    function inline(text) {
+      return text
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
+        .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2">$2</a>');
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  })();
+</script>
+
+</body>
+</html>

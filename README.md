@@ -1,0 +1,119 @@
+# BlackScreens
+
+Windows tray app that blacks out the monitors you are not using while a fullscreen or
+borderless game is running. The game keeps its monitor, the monitor you are working on stays
+clear, and everything else goes dark so nothing pulls your eye mid fight.
+
+The project website lives in [`docs/`](docs/). Turn it on under
+Settings > Pages > Deploy from a branch > `main` / `/docs`. It reads the latest release from the
+GitHub API at page load, so the version, the download links, the file sizes and the release notes
+all follow whatever you last published without anyone editing the page.
+
+- Detects fullscreen and borderless windows, ignores the browser, chat app and shell processes
+  on the denylist
+- Keeps the game monitor, the focused monitor and any monitor you whitelist clear
+- Covered monitors go solid black, or run a Windows screensaver if you prefer
+- Pause from the tray or with `Ctrl + Alt + B`
+- Themed settings window that follows Windows dark mode
+- No account, no telemetry, no network access
+
+## Install
+
+Download the latest release:
+
+| File | What it is |
+| --- | --- |
+| `BlackScreens-<version>-setup.exe` | Installer. Goes into your user profile, no admin prompt |
+| `BlackScreens-<version>-win-x64.exe` | The same app as one portable file. Nothing to install |
+| `BlackScreens-<version>-win-x64-runtime.zip` | Much smaller, needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+
+Either way BlackScreens ends up in the tray. Turn on **Start with Windows** on the General page if
+you want it back after a reboot. The installer leaves your settings behind when you uninstall unless
+you say otherwise.
+
+## Using it
+
+Right click the tray icon:
+
+- **Pause** shows a check mark while blackout is suspended. `Ctrl + Alt + B` does the same thing
+- **Settings...** opens the settings window. Double clicking the tray icon does this too
+- **Keep monitor clear** is a quick whitelist toggle per monitor
+- **Quit** exits
+
+Settings pages:
+
+- **General** start with Windows, theme, pause hotkey, how often detection runs
+- **Detection** whether background fullscreen counts, and whether the focused monitor is always kept clear
+- **Blackout** solid black or a Windows screensaver on the covered monitors, with Configure and Test
+- **Monitors** which monitors never go black, with an Identify button that flashes a number on each screen
+- **Denylist** processes that never count as the game, with icons and a Browse button to pick a program
+- **About** version, signature, and the settings and log file locations
+
+Blackout is put on hold while the settings window is open so it cannot cover what you are editing.
+
+## Screensavers on the covered monitors
+
+Switch **Blackout** to "Windows screensaver" and the covered monitors run a screensaver instead of
+showing black. The game monitor, the monitor you are working on, and any whitelisted monitor are
+never touched. BlackScreens hosts the screensaver in preview mode inside its own overlay, the same
+mechanism the Windows personalization dialog uses, so nothing takes over the desktop and no mouse
+movement can dismiss it mid game. A busy screensaver does use the GPU, so a heavy one can cost you
+frames. If the chosen screensaver refuses to run, the monitor simply stays black.
+
+## How detection works
+
+Every poll, BlackScreens looks at the visible top level windows. A window counts as a game when it
+is not cloaked, has no caption or is a popup, fills its monitor within two pixels, and its process
+is not on the denylist. By default only the foreground window can trigger blackout, so a game you
+alt tabbed away from leaves your desktop alone. Monitor rectangles are matched against
+`EnumDisplayMonitors` before any overlay is shown, so a near miss can never black out every screen.
+
+## Files
+
+- Settings: `%LocalAppData%\BlackScreens\settings.json`
+- Errors: `%LocalAppData%\BlackScreens\error.log`
+
+Both are reachable from Settings > About.
+
+## Building
+
+```
+dotnet test
+dotnet run --project src/BlackScreens
+```
+
+Release artifacts:
+
+```
+pwsh scripts/publish.ps1
+```
+
+That runs the tests, publishes both flavours, and builds the NSIS installer when `makensis` is
+available. Requires the .NET 10 SDK, plus [NSIS](https://nsis.sourceforge.io) for the installer.
+
+## Cutting a release
+
+```
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+That is the whole process. `.github/workflows/release.yml` takes the version from the tag, stamps it
+into the binaries and the installer, runs the tests, publishes all three artifacts, signs them when
+SignPath is configured, and publishes the GitHub release. The website picks the new release up on its
+next page load.
+
+Nothing in the repository stores the release version, so there is no file to bump. The `<Version>`
+in the project file is only the fallback for local builds.
+
+To preview the site against a real repository before it is published, serve `docs/` and add
+`?repo=owner/name` to the URL.
+
+See `AGENTS.MD` for the layout and conventions,
+[`docs/CODE-SIGNING.md`](docs/CODE-SIGNING.md) for how releases get signed, and
+[`docs/index.html`](docs/index.html) for the project website. The site works out of a plain `docs/`
+folder with no build step, and its links resolve to whichever repository serves it.
+
+## License
+
+MIT, see [`LICENSE`](LICENSE).
