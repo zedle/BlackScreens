@@ -8,11 +8,11 @@
 <link rel="canonical" href="https://blackscreens.app/">
 <meta name="theme-color" content="#12141a">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
-<!-- The version has to change whenever styles.css does. The page and the stylesheet are
-     cached separately for ten minutes each, so without it a browser can pair new markup
-     with the previous stylesheet, which is what happened when the lightbox first shipped. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<!-- The version has to change whenever styles.css does. The page and the stylesheet are cached
+     separately, so without it a browser can pair new markup with the previous stylesheet, which is
+     what happened when the lightbox first shipped. -->
 <link rel="stylesheet" href="styles.css?v=7">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Plain text summary for language models">
@@ -74,6 +74,7 @@
     "Optional Windows screensaver on the covered monitors instead of solid black",
     "Adjustable overlay opacity, so a covered monitor can be seen through",
     "Chosen programs can stay visible above the overlay, for a capture or chat window",
+    "Alt tab between the game and those programs without the blackout dropping",
     "Process denylist so browsers, chat apps and the shell never count as a game",
     "Global pause hotkey and a tray menu",
     "Optional update check against GitHub releases, off by default",
@@ -454,7 +455,15 @@
     // shipped. This has to be declared above the call to fetchLatest below: as a var underneath it,
     // it hoisted as undefined and every freshness check against it was false, which quietly turned
     // the cache off altogether.
-    var cacheLifetimeMs = 10 * 60 * 1000;
+    var cacheLifetimeMs = 3 * 60 * 1000;
+
+    // Reloading a page is someone asking for the current state of it, but sessionStorage survives a
+    // reload, so the cache would answer with whatever it already had. A reload always refetches.
+    var reloaded = false;
+    try {
+      var nav = performance.getEntriesByType('navigation')[0];
+      reloaded = nav ? nav.type === 'reload' : performance.navigation.type === 1;
+    } catch (e) { /* older browser, treat as a normal visit */ }
 
     var assetPatterns = {
       x64: {
@@ -537,7 +546,7 @@
         if (stored) cached = JSON.parse(stored);
       } catch (e) { /* private mode, or something else wrote nonsense here */ }
 
-      if (cached && cached.fetched && (Date.now() - cached.fetched) < cacheLifetimeMs) {
+      if (!reloaded && cached && cached.fetched && (Date.now() - cached.fetched) < cacheLifetimeMs) {
         return Promise.resolve(cached);
       }
 
