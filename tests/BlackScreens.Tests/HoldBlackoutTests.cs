@@ -34,7 +34,7 @@ public sealed class HoldBlackoutTests
     public void With_the_option_off_focusing_the_program_ends_the_blackout()
     {
         // With the option turned off: the game is no longer in front, so nothing is blacked out.
-        var result = Detector(hold: false).Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)]);
+        var result = Detector(hold: false).Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)], blackoutActive: true);
 
         Assert.Empty(result.GameMonitors);
         Assert.Empty(result.BlackMonitors(TwoMonitors));
@@ -43,7 +43,7 @@ public sealed class HoldBlackoutTests
     [Fact]
     public void With_the_option_on_the_blackout_survives_focusing_the_program()
     {
-        var result = Detector(hold: true).Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)]);
+        var result = Detector(hold: true).Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)], blackoutActive: true);
 
         Assert.Equal([Monitor1], result.GameMonitors);
 
@@ -56,7 +56,7 @@ public sealed class HoldBlackoutTests
     public void The_game_still_has_to_be_running()
     {
         // Same setup with the game gone. Nothing to hold up, so nothing is blacked out.
-        var result = Detector(hold: true).Decide([Obs(Monitor2, foreground: true)]);
+        var result = Detector(hold: true).Decide([Obs(Monitor2, foreground: true)], blackoutActive: true);
 
         Assert.Empty(result.GameMonitors);
         Assert.Empty(result.BlackMonitors(TwoMonitors));
@@ -69,7 +69,7 @@ public sealed class HoldBlackoutTests
         var other = new WindowSnapshot("notepad", new Rectangle(2000, 100, 600, 400),
             WindowStyles.WsCaption, 0, true, false, true, Monitor2);
 
-        var result = Detector(hold: true).Decide([Game(Monitor1, foreground: false), other]);
+        var result = Detector(hold: true).Decide([Game(Monitor1, foreground: false), other], blackoutActive: true);
 
         Assert.Empty(result.BlackMonitors(TwoMonitors));
     }
@@ -84,6 +84,46 @@ public sealed class HoldBlackoutTests
     }
 
     [Fact]
+    public void Focusing_the_program_with_nothing_running_does_not_black_anything_out()
+    {
+        // The bug this release fixes. Holding is only ever allowed to keep a blackout alive; with no
+        // blackout to keep, focusing the program must do nothing at all.
+        var result = Detector(hold: true).Decide([Obs(Monitor2, foreground: true)], blackoutActive: false);
+
+        Assert.Empty(result.GameMonitors);
+        Assert.Empty(result.BlackMonitors(TwoMonitors));
+    }
+
+    [Fact]
+    public void A_background_window_cannot_start_a_blackout_just_because_the_program_has_focus()
+    {
+        // Holding used to judge every window as if background games were on, so anything fullscreen
+        // sitting behind could start a blackout that would never otherwise have happened.
+        var result = Detector(hold: true).Decide(
+            [Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)], blackoutActive: false);
+
+        Assert.Empty(result.BlackMonitors(TwoMonitors));
+    }
+
+    [Fact]
+    public void A_program_on_the_list_is_never_itself_the_game()
+    {
+        // Obsidian and the like run fullscreen quite happily. Being on the on top list says the
+        // program belongs over a blackout, so it must never be the thing that causes one.
+        var fullscreenObs = new WindowSnapshot("obs64", Monitor2, WindowStyles.WsPopup, 0,
+            true, false, true, Monitor2);
+
+        var result = Detector(hold: true).Decide([fullscreenObs], blackoutActive: false);
+
+        Assert.Empty(result.GameMonitors);
+        Assert.Empty(result.BlackMonitors(TwoMonitors));
+
+        // Not even while a blackout is already running.
+        var during = Detector(hold: true).Decide([fullscreenObs], blackoutActive: true);
+        Assert.Empty(during.GameMonitors);
+    }
+
+    [Fact]
     public void An_empty_list_holds_nothing()
     {
         var detector = new GameDetector(new ProcessDenylist([]), new DetectOptions
@@ -92,7 +132,7 @@ public sealed class HoldBlackoutTests
             HoldsBlackout = new ProcessRules([])
         });
 
-        var result = detector.Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)]);
+        var result = detector.Decide([Game(Monitor1, foreground: false), Obs(Monitor2, foreground: true)], blackoutActive: true);
 
         Assert.Empty(result.BlackMonitors(TwoMonitors));
     }
@@ -169,7 +209,7 @@ public sealed class TaskSwitcherTests
     [InlineData("TaskSwitcherOverlayWnd")]
     public void The_switcher_does_not_end_a_blackout(string className)
     {
-        var result = Strict().Decide([Game(Monitor1, foreground: false), Switcher(Monitor1, className)]);
+        var result = Strict().Decide([Game(Monitor1, foreground: false), Switcher(Monitor1, className)], blackoutActive: true);
 
         Assert.Equal([Monitor1], result.GameMonitors);
         Assert.Equal([Monitor2], result.BlackMonitors(TwoMonitors));
@@ -180,7 +220,7 @@ public sealed class TaskSwitcherTests
     {
         // The switcher appears over the blacked out screen, and clearing that monitor would show the
         // desktop behind it, which is the flash this is meant to stop.
-        var result = Strict().Decide([Game(Monitor1, foreground: false), Switcher(Monitor2, "TaskSwitcherWnd")]);
+        var result = Strict().Decide([Game(Monitor1, foreground: false), Switcher(Monitor2, "TaskSwitcherWnd")], blackoutActive: true);
 
         Assert.Equal([Monitor2], result.BlackMonitors(TwoMonitors));
     }
@@ -188,7 +228,17 @@ public sealed class TaskSwitcherTests
     [Fact]
     public void It_still_needs_a_game()
     {
-        var result = Strict().Decide([Switcher(Monitor1, "TaskSwitcherWnd")]);
+        var result = Strict().Decide([Switcher(Monitor1, "TaskSwitcherWnd")], blackoutActive: true);
+
+        Assert.Empty(result.BlackMonitors(TwoMonitors));
+    }
+
+    [Fact]
+    public void The_switcher_cannot_start_a_blackout_either()
+    {
+        // Alt tabbing around with nothing running must not black the screens out.
+        var result = Strict().Decide(
+            [Game(Monitor1, foreground: false), Switcher(Monitor1, "TaskSwitcherWnd")], blackoutActive: false);
 
         Assert.Empty(result.BlackMonitors(TwoMonitors));
     }
@@ -204,7 +254,7 @@ public sealed class TaskSwitcherTests
             ClassName = "CabinetWClass"
         };
 
-        var result = Strict().Decide([Game(Monitor1, foreground: false), explorer]);
+        var result = Strict().Decide([Game(Monitor1, foreground: false), explorer], blackoutActive: true);
 
         Assert.Empty(result.BlackMonitors(TwoMonitors));
     }

@@ -338,7 +338,9 @@ internal sealed class BlackScreensApplicationContext : ApplicationContext
             ScanResult result;
             try
             {
-                result = _detector.Decide(WindowEnumerator.Capture());
+                // Holding a blackout across a change of focus only makes sense while there is one,
+                // so the detector is told whether the screens are black right now.
+                result = _detector.Decide(WindowEnumerator.Capture(), _overlays.Count > 0);
                 _detectorFailing = false;
             }
             catch (Exception ex)

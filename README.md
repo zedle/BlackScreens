@@ -84,9 +84,12 @@ as soon as it ends, and when BlackScreens closes.
 
 **Keep the screens black while one of these has focus** is on, and means what it says: alt tabbing
 between the game and these programs does not drop the blackout, so you can read chat or watch a
-capture preview without the other screens lighting up behind it. It does nothing until something is
-on the list, and the game still has to be running fullscreen, so closing it ends the blackout as
-usual. Turn it off if you would rather the screens come back whenever the game is not in front.
+capture preview without the other screens lighting up behind it. Turn it off if you would rather the
+screens come back whenever the game is not in front.
+
+It can only keep a blackout going, never start one. With no game running, focusing one of these
+programs does nothing, and a program on this list is never treated as a game itself however
+fullscreen it happens to be.
 
 The Alt Tab switcher itself never ends a blackout, whatever these settings say. It takes the
 foreground for as long as Alt is held, which used to light the screens up behind the switcher you

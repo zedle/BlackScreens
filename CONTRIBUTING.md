@@ -95,6 +95,11 @@ pwsh scripts/publish.ps1
   above the overlay four times a second, and it visibly flickered as it was covered and uncovered.
   Both now act only when the z order is actually wrong: the overlays are pushed back only when the
   foreground has moved, and a kept window is raised only when it is behind an overlay.
+- **Holding a blackout only sustains one.** Both the task switcher and the on top list judge the
+  game as if it were in the background, which is only safe while the screens are already black. The
+  first version did it unconditionally, so focusing a program on the on top list blacked every screen
+  out with nothing running. `Decide` takes whether a blackout is active for that reason, and a
+  program on the on top list is never counted as a game.
 - **The task switcher.** Alt Tab and Task View take the foreground while they are on screen, and
   treating that as a real change of foreground ends a blackout, which lights the screens up behind
   the switcher. `TaskSwitcher` matches them by window class, not by process, because explorer.exe
